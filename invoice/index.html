@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en-ZA">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Invoice Generator | DANDYAPP</title>
+    <meta name="description" content="Free South African invoice generator. Creates a SARS-compliant tax invoice with 15% VAT, saved business profile, client book and a print-perfect A4 PDF. Runs entirely in your browser - nothing is uploaded." />
+    <meta name="keywords" content="invoice generator south africa, tax invoice template south africa, vat invoice 15%, free invoice maker za, sars tax invoice requirements" />
+    <link rel="canonical" href="https://dandyapp.co.za/invoice/" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/dandy.css">
+    <link rel="stylesheet" href="../css/doc.css">
+    <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+
+    <meta property="og:title" content="Invoice Generator | DANDYAPP" />
+    <meta property="og:description" content="A proper South African tax invoice, saved clients, and a clean A4 PDF straight from the browser." />
+    <meta property="og:url" content="https://dandyapp.co.za/invoice/" />
+</head>
+<body>
+
+<div class="slab">
+
+    <header class="site-header" style="position:static;background:var(--slab);border-bottom:1px solid var(--hairline)">
+        <a href="../" class="wordmark">DANDY<span>APP</span></a>
+        <nav class="pill-nav" aria-label="Primary">
+            <a href="../">Home</a>
+            <a href="../toolbelt/">Toolbelt</a>
+            <a href="../quote/">Quotes</a>
+            <a href="./" aria-current="page">Invoices</a>
+            <span class="sep" aria-hidden="true"></span>
+            <a href="https://www.matthewmckenzie.co.za" class="credit" rel="noopener">Made by McKenzie <i data-icon="arrow-up-right"></i></a>
+        </nav>
+        <div class="rule"></div>
+        <div class="header-cta">
+            <a href="../quote/">NEW QUOTE <i data-icon="arrow-up-right"></i></a>
+        </div>
+    </header>
+
+
+    <main class="doc">
+
+        <div class="doc-head">
+            <div>
+                <p class="eyebrow">Tool 03</p>
+                <h1>INVOICE</h1>
+            </div>
+            <p class="tb-privacy" style="display:flex;align-items:center;gap:.5rem;font-size:.75rem;font-weight:600;color:var(--muted);background:#fff;border:1px solid var(--border);padding:.5rem 1rem;border-radius:var(--r-pill)">
+                <i data-icon="shield"></i>
+                Saved in this browser only. Never uploaded.
+            </p>
+        </div>
+
+        <div class="doc-toolbar no-print">
+            <button class="btn btn-sm" id="t-new"><i data-icon="plus"></i>New</button>
+            <button class="btn btn-sm" id="t-save"><i data-icon="save"></i>Save</button>
+            <button class="btn btn-sm" id="t-dup"><i data-icon="copy"></i>Duplicate</button>
+            <span class="spacer"></span>
+            <button class="btn btn-dark btn-sm" id="t-print"><i data-icon="printer"></i>Download PDF</button>
+        </div>
+
+        <p class="note note-warn mb-2 no-print" id="compliance" hidden></p>
+
+        <div class="doc-layout">
+            <div class="doc-form" id="doc-form"></div>
+            <div class="doc-preview" id="doc-preview"></div>
+        </div>
+
+        <p class="muted no-print mt-3" style="font-size:.75rem;max-width:46rem">
+            <b>Saving as PDF:</b> Download PDF opens your browser's print dialog. Choose
+            &ldquo;Save as PDF&rdquo; as the destination and leave margins on default. The result is a
+            real A4 document with selectable text, not a screenshot.
+        </p>
+    </main>
+
+    <footer class="site-footer no-print">
+        <div class="footer-top">
+            <div>
+                <h2>DANDYAPP</h2>
+                <p>A small collection of fast, private tools built for the way South African developers actually work.</p>
+            </div>
+            <nav class="footer-links" aria-label="Footer">
+                <a href="../">Home</a>
+                <a href="../toolbelt/">Toolbelt</a>
+                <a href="../quote/">Quotes</a>
+            </nav>
+            <a class="footer-credit" href="https://www.matthewmckenzie.co.za" rel="noopener">
+                Made by Matthew McKenzie <i data-icon="arrow-up-right"></i>
+            </a>
+        </div>
+        <div class="footer-bottom">
+            <p>DANDYAPP does not provide financial, tax or legal advice. The template aims to reflect the South African VAT Act's tax-invoice requirements, but you remain responsible for confirming that any document you issue is correct and complete for your circumstances.</p>
+            <p>Copyright &copy; 2026 DANDYAPP. All Rights Reserved. Designed and built by
+                <a href="https://www.matthewmckenzie.co.za" rel="noopener" style="text-decoration:underline">Matthew McKenzie</a>.</p>
+        </div>
+    </footer>
+
+</div>
+
+<script src="../js/core.js"></script>
+<script src="../js/billing.js"></script>
+<script src="../js/doc-editor.js"></script>
+<script>DocEditor.start('invoice');</script>
+</body>
+</html>
