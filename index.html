@@ -1,19 +1,42 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en-ZA">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <title>DANDYAPP | Fast, Private Tools for Developers</title>
-    <meta name="description" content="A small set of dead-simple tools for South African developers. Dev toolbelt, quote builder and VAT-compliant invoice generator. Everything runs in your browser - nothing is uploaded." />
-    <meta name="keywords" content="south africa invoice generator, vat invoice template south africa, quote builder, developer tools, json formatter, jwt decoder, free invoice generator za" />
+    <title>
+      DANDYAPP | Free Dev Tools, Quote Builder &amp; SA Invoice Generator
+    </title>
+    <meta
+      name="description"
+      content="Free browser-based tools for South African developers and freelancers: a 10-in-1 dev toolbelt, a quote builder and a SARS-compliant 15% VAT invoice generator. No accounts, no ads, no uploads - everything runs in your browser."
+    />
+    <meta
+      name="keywords"
+      content="free invoice generator south africa, tax invoice template south africa, sars compliant invoice, 15% vat invoice, quotation template south africa, quote builder za, developer tools online, json formatter, jwt decoder, base64 encoder, uuid generator, regex tester, free tools for freelancers south africa"
+    />
     <link rel="canonical" href="https://dandyapp.co.za/" />
+    <meta
+      name="robots"
+      content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"
+    />
+    <meta name="author" content="Matthew McKenzie" />
+    <meta name="theme-color" content="#f8fafc" />
+    <meta name="format-detection" content="telephone=no" />
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/dandy.css">
-    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/dandy.css" />
+
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
+    <link rel="icon" href="/favicon-96x96.png" type="image/png" sizes="96x96" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <meta name="apple-mobile-web-app-title" content="DANDYAPP" />
 
     <meta name="geo.region" content="ZA-GP" />
     <meta name="geo.placename" content="Johannesburg, Gauteng, South Africa" />
@@ -21,186 +44,470 @@
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://dandyapp.co.za/" />
     <meta property="og:site_name" content="DANDYAPP" />
-    <meta property="og:title" content="DANDYAPP | Fast, Private Tools for Developers" />
-    <meta property="og:description" content="Dev toolbelt, quote builder and VAT-compliant invoice generator. Everything runs in your browser." />
+    <meta
+      property="og:title"
+      content="DANDYAPP | Free Dev Tools, Quote Builder &amp; SA Invoice Generator"
+    />
+    <meta
+      property="og:description"
+      content="A dev toolbelt, quote builder and SARS-compliant VAT invoice generator. Everything runs in your browser - nothing is uploaded."
+    />
+    <meta
+      property="og:image"
+      content="https://dandyapp.co.za/assets/og-image.png"
+    />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="DANDYAPP - fast, private tools for South African developers"
+    />
     <meta property="og:locale" content="en_ZA" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="DANDYAPP | Fast, Private Tools for Developers" />
-    <meta name="twitter:description" content="Dev toolbelt, quote builder and VAT-compliant invoice generator. Everything runs in your browser." />
+    <meta
+      name="twitter:title"
+      content="DANDYAPP | Free Dev Tools, Quote Builder &amp; SA Invoice Generator"
+    />
+    <meta
+      name="twitter:description"
+      content="A dev toolbelt, quote builder and SARS-compliant VAT invoice generator. Everything runs in your browser - nothing is uploaded."
+    />
+    <meta
+      name="twitter:image"
+      content="https://dandyapp.co.za/assets/og-image.png"
+    />
+    <meta
+      name="twitter:image:alt"
+      content="DANDYAPP - fast, private tools for South African developers"
+    />
 
     <script type="application/ld+json">
-    {
+      {
         "@context": "https://schema.org",
-        "@type": "WebApplication",
-        "name": "DANDYAPP",
-        "url": "https://dandyapp.co.za",
-        "applicationCategory": "DeveloperApplication",
-        "operatingSystem": "Any",
-        "description": "Fast, private, browser-only tools for developers: a dev toolbelt, a quote builder and a South African VAT-compliant invoice generator.",
-        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "ZAR" },
-        "author": { "@type": "Person", "name": "Matthew McKenzie", "url": "https://www.matthewmckenzie.co.za" }
-    }
+        "@graph": [
+          {
+            "@type": "WebSite",
+            "@id": "https://dandyapp.co.za/#website",
+            "url": "https://dandyapp.co.za/",
+            "name": "DANDYAPP",
+            "description": "Fast, private, browser-only tools for South African developers and freelancers.",
+            "inLanguage": "en-ZA",
+            "publisher": { "@id": "https://dandyapp.co.za/#person" }
+          },
+          {
+            "@type": "Person",
+            "@id": "https://dandyapp.co.za/#person",
+            "name": "Matthew McKenzie",
+            "url": "https://www.matthewmckenzie.co.za"
+          },
+          {
+            "@type": "WebApplication",
+            "@id": "https://dandyapp.co.za/#app",
+            "name": "DANDYAPP",
+            "url": "https://dandyapp.co.za/",
+            "applicationCategory": "DeveloperApplication",
+            "applicationSubCategory": "Business and Invoicing Tools",
+            "operatingSystem": "Any (web browser)",
+            "browserRequirements": "Requires JavaScript. Works offline after first load.",
+            "description": "Fast, private, browser-only tools for developers: a dev toolbelt, a quote builder and a South African VAT-compliant invoice generator.",
+            "image": "https://dandyapp.co.za/assets/og-image.png",
+            "inLanguage": "en-ZA",
+            "isAccessibleForFree": true,
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "ZAR"
+            },
+            "featureList": [
+              "JSON formatter, validator and tree view",
+              "JWT decoder with SAST expiry",
+              "Base64, hashes, UUIDs and epoch conversion",
+              "Regex tester with South African presets",
+              "Text diff, case converter and cURL to fetch",
+              "Quotation builder with reusable service presets",
+              "SARS-compliant tax invoice generator with 15% VAT",
+              "Print-perfect A4 PDF export"
+            ],
+            "areaServed": { "@type": "Country", "name": "South Africa" },
+            "author": { "@id": "https://dandyapp.co.za/#person" }
+          },
+          {
+            "@type": "FAQPage",
+            "@id": "https://dandyapp.co.za/#faq",
+            "mainEntity": [
+              {
+                "@type": "Question",
+                "name": "Is DANDYAPP free to use?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Yes. Every tool is free, with no account, no sign-up and no ads."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Is my data uploaded to a server?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "No. There is no server. Every tool runs as JavaScript in your browser tab, so tokens, client names and invoice totals are never transmitted anywhere. Your profile, clients, presets and documents are stored in your browser and can be exported to a JSON file."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Are the invoices SARS compliant?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "The invoice template is built around the tax-invoice fields required by the South African VAT Act, including 15% VAT calculated inclusive or exclusive. DANDYAPP does not provide tax or legal advice, so you remain responsible for confirming that any document you issue is correct and complete for your circumstances."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Which currencies are supported?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Invoices and quotes can be issued in ZAR, USD, EUR or GBP."
+                }
+              }
+            ]
+          }
+        ]
+      }
     </script>
-</head>
-<body>
-
-<div class="slab">
-
-    <header class="site-header">
+  </head>
+  <body>
+    <div class="slab">
+      <header class="site-header">
         <span class="wordmark">DANDY<span>APP</span></span>
 
         <nav class="pill-nav" aria-label="Primary">
-            <a href="/" aria-current="page">Home</a>
-            <a href="toolbelt/">Toolbelt</a>
-            <a href="quote/">Quotes</a>
-            <a href="invoice/">Invoices</a>
-            <span class="sep" aria-hidden="true"></span>
-            <a href="https://www.matthewmckenzie.co.za" class="credit" rel="noopener">Made by McKenzie <i data-icon="arrow-up-right"></i></a>
+          <a href="/" aria-current="page">Home</a>
+          <a href="toolbelt/">Toolbelt</a>
+          <a href="quote/">Quotes</a>
+          <a href="invoice/">Invoices</a>
+          <span class="sep" aria-hidden="true"></span>
+          <a
+            href="https://www.matthewmckenzie.co.za"
+            class="credit"
+            rel="noopener"
+            >Made by McKenzie <i data-icon="arrow-up-right"></i
+          ></a>
         </nav>
 
         <div class="rule"></div>
 
         <div class="header-cta">
-            <a href="toolbelt/">OPEN TOOLBELT <i data-icon="arrow-up-right"></i></a>
+          <a href="toolbelt/"
+            >OPEN TOOLBELT <i data-icon="arrow-up-right"></i
+          ></a>
         </div>
-    </header>
+      </header>
 
-    <!-- HERO -->
-    <section class="hero">
-        <h1 class="sr-only">DANDYAPP - fast, private browser-only tools for South African developers</h1>
+      <!-- HERO -->
+      <section class="hero">
+        <h1 class="sr-only">
+          DANDYAPP - fast, private browser-only tools for South African
+          developers
+        </h1>
         <div class="hero-scrim"></div>
 
         <div class="hero-type" aria-hidden="true">
-            <div class="line-1">DANDY</div>
-            <div class="line-2">APP</div>
+          <div class="line-1">dandy app</div>
+          <div class="line-2">v4</div>
         </div>
 
         <div class="hero-foot">
-            <div class="hero-card">
-                <h2>SMALL TOOLS,<br>USED EVERY DAY</h2>
-                <p>Three things a developer actually reaches for: decode a token, quote a job, send the invoice. No ads, no accounts, no uploads - every byte you paste stays in this browser.</p>
-                <a class="arrow-link" href="#tools">
-                    <span class="label">See the tools</span>
-                    <span class="track">
-                        <i></i>
-                        <span class="knob"><i data-icon="arrow-right"></i></span>
-                    </span>
-                </a>
-            </div>
+          <div class="hero-card">
+            <h2>SMALL TOOLS,<br />USED EVERY DAY</h2>
+            <p>
+              Three things a developer actually reaches for: decode a token,
+              quote a job, send the invoice. No ads, no accounts, no uploads -
+              every byte you paste stays in this browser.
+            </p>
+            <a class="arrow-link" href="#tools">
+              <span class="label">See the tools</span>
+              <span class="track">
+                <i></i>
+                <span class="knob"><i data-icon="arrow-right"></i></span>
+              </span>
+            </a>
+          </div>
         </div>
-    </section>
+      </section>
 
-    <!-- TOOLS -->
-    <section id="tools" class="section" style="border-top:1px solid var(--hairline)">
+      <!-- TOOLS -->
+      <section
+        id="tools"
+        class="section"
+        style="border-top: 1px solid var(--hairline)"
+      >
         <div class="wrap">
+          <div class="reveal" style="max-width: 44rem; margin-bottom: 3.5rem">
+            <p class="eyebrow mb-2">The Toolkit</p>
+            <h2
+              style="
+                font-size: clamp(2.25rem, 6vw, 4.5rem);
+                margin-bottom: 1.5rem;
+              "
+            >
+              THREE TOOLS
+            </h2>
+            <p class="lede">
+              Each one exists because the free alternative is slower, covered in
+              ads, or quietly sends your data to a server you don't control.
+              These do neither. Open the page, do the thing, close the tab.
+            </p>
+          </div>
 
-            <div class="reveal" style="max-width:44rem;margin-bottom:3.5rem">
-                <p class="eyebrow mb-2">The Toolkit</p>
-                <h2 style="font-size:clamp(2.25rem,6vw,4.5rem);margin-bottom:1.5rem">THREE TOOLS</h2>
-                <p class="lede">Each one exists because the free alternative is slower, covered in ads, or quietly sends your data to a server you don't control. These do neither. Open the page, do the thing, close the tab.</p>
-            </div>
+          <div class="card-grid">
+            <a class="tool-card reveal" href="toolbelt/">
+              <div class="body">
+                <span class="badge"><i data-icon="braces"></i> Tool 01</span>
+                <h3>DEV TOOLBELT</h3>
+                <p>
+                  Ten everyday utilities behind one keystroke. Decode, format,
+                  hash, diff, convert.
+                </p>
+                <ul>
+                  <li>
+                    <i data-icon="check"></i> JSON format, validate &amp; tree
+                    view
+                  </li>
+                  <li><i data-icon="check"></i> JWT decode with SAST expiry</li>
+                  <li>
+                    <i data-icon="check"></i> Base64, hashes, UUIDs, epochs
+                  </li>
+                  <li>
+                    <i data-icon="check"></i> Regex tester with SA presets
+                  </li>
+                  <li>
+                    <i data-icon="check"></i> Diff, case convert, cURL &rarr;
+                    fetch
+                  </li>
+                </ul>
+                <span class="go">Open <i data-icon="arrow-right"></i></span>
+              </div>
+            </a>
 
-            <div class="card-grid">
+            <a class="tool-card reveal" href="quote/">
+              <div class="body">
+                <span class="badge"><i data-icon="file-text"></i> Tool 02</span>
+                <h3>QUOTE BUILDER</h3>
+                <p>
+                  Quote a job in under a minute using your own saved line items,
+                  then turn it into an invoice with one click.
+                </p>
+                <ul>
+                  <li><i data-icon="check"></i> Reusable service presets</li>
+                  <li><i data-icon="check"></i> Optional line items</li>
+                  <li><i data-icon="check"></i> Deposit on acceptance</li>
+                  <li><i data-icon="check"></i> Valid-until dates</li>
+                  <li>
+                    <i data-icon="check"></i> Convert straight to an invoice
+                  </li>
+                </ul>
+                <span class="go">Open <i data-icon="arrow-right"></i></span>
+              </div>
+            </a>
 
-                <a class="tool-card reveal" href="toolbelt/">
-                    <div class="body">
-                        <span class="badge"><i data-icon="braces"></i> Tool 01</span>
-                        <h3>DEV TOOLBELT</h3>
-                        <p>Ten everyday utilities behind one keystroke. Decode, format, hash, diff, convert.</p>
-                        <ul>
-                            <li><i data-icon="check"></i> JSON format, validate &amp; tree view</li>
-                            <li><i data-icon="check"></i> JWT decode with SAST expiry</li>
-                            <li><i data-icon="check"></i> Base64, hashes, UUIDs, epochs</li>
-                            <li><i data-icon="check"></i> Regex tester with SA presets</li>
-                            <li><i data-icon="check"></i> Diff, case convert, cURL &rarr; fetch</li>
-                        </ul>
-                        <span class="go">Open <i data-icon="arrow-right"></i></span>
-                    </div>
-                </a>
-
-                <a class="tool-card reveal" href="quote/">
-                    <div class="body">
-                        <span class="badge"><i data-icon="file-text"></i> Tool 02</span>
-                        <h3>QUOTE BUILDER</h3>
-                        <p>Quote a job in under a minute using your own saved line items, then turn it into an invoice with one click.</p>
-                        <ul>
-                            <li><i data-icon="check"></i> Reusable service presets</li>
-                            <li><i data-icon="check"></i> Optional line items</li>
-                            <li><i data-icon="check"></i> Deposit on acceptance</li>
-                            <li><i data-icon="check"></i> Valid-until dates</li>
-                            <li><i data-icon="check"></i> Convert straight to an invoice</li>
-                        </ul>
-                        <span class="go">Open <i data-icon="arrow-right"></i></span>
-                    </div>
-                </a>
-
-                <a class="tool-card reveal" href="invoice/">
-                    <div class="body">
-                        <span class="badge"><i data-icon="receipt"></i> Tool 03</span>
-                        <h3>INVOICE GENERATOR</h3>
-                        <p>A proper South African tax invoice, saved clients, and a clean A4 PDF straight from the browser.</p>
-                        <ul>
-                            <li><i data-icon="check"></i> SARS tax-invoice fields</li>
-                            <li><i data-icon="check"></i> 15% VAT, inclusive or exclusive</li>
-                            <li><i data-icon="check"></i> Saved profile &amp; client book</li>
-                            <li><i data-icon="check"></i> ZAR, USD, EUR, GBP</li>
-                            <li><i data-icon="check"></i> Print-perfect A4 PDF</li>
-                        </ul>
-                        <span class="go">Open <i data-icon="arrow-right"></i></span>
-                    </div>
-                </a>
-
-            </div>
+            <a class="tool-card reveal" href="invoice/">
+              <div class="body">
+                <span class="badge"><i data-icon="receipt"></i> Tool 03</span>
+                <h3>INVOICE GENERATOR</h3>
+                <p>
+                  A proper South African tax invoice, saved clients, and a clean
+                  A4 PDF straight from the browser.
+                </p>
+                <ul>
+                  <li><i data-icon="check"></i> SARS tax-invoice fields</li>
+                  <li>
+                    <i data-icon="check"></i> 15% VAT, inclusive or exclusive
+                  </li>
+                  <li>
+                    <i data-icon="check"></i> Saved profile &amp; client book
+                  </li>
+                  <li><i data-icon="check"></i> ZAR, USD, EUR, GBP</li>
+                  <li><i data-icon="check"></i> Print-perfect A4 PDF</li>
+                </ul>
+                <span class="go">Open <i data-icon="arrow-right"></i></span>
+              </div>
+            </a>
+          </div>
         </div>
-    </section>
+      </section>
 
-    <!-- WHY -->
-    <section class="section" style="background:#fff;border-top:1px solid var(--hairline)">
+      <!-- WHY -->
+      <section
+        class="section"
+        style="background: #fff; border-top: 1px solid var(--hairline)"
+      >
         <div class="wrap">
-            <div class="card-grid">
-                <div class="reveal">
-                    <span class="row mb-2" style="gap:.625rem"><i data-icon="shield" style="width:1.25rem"></i><span class="eyebrow" style="color:var(--ink)">Nothing leaves</span></span>
-                    <p class="lede" style="font-size:.9375rem">There is no server. Every tool runs as JavaScript in your tab, so tokens, client names and invoice totals are never transmitted anywhere. Turn off your Wi-Fi and it all still works.</p>
-                </div>
-                <div class="reveal">
-                    <span class="row mb-2" style="gap:.625rem"><i data-icon="zap" style="width:1.25rem"></i><span class="eyebrow" style="color:var(--ink)">Genuinely fast</span></span>
-                    <p class="lede" style="font-size:.9375rem">No framework, no CSS pipeline, no icon font, no analytics. One small stylesheet and a handful of scripts. Pages paint immediately, even on a bad mobile connection.</p>
-                </div>
-                <div class="reveal">
-                    <span class="row mb-2" style="gap:.625rem"><i data-icon="save" style="width:1.25rem"></i><span class="eyebrow" style="color:var(--ink)">Yours to keep</span></span>
-                    <p class="lede" style="font-size:.9375rem">Your profile, clients, presets and documents live in this browser's storage. Export the lot to a JSON file whenever you want, and import it on another machine.</p>
-                </div>
+          <div class="card-grid">
+            <div class="reveal">
+              <span class="row mb-2" style="gap: 0.625rem"
+                ><i data-icon="shield" style="width: 1.25rem"></i
+                ><span class="eyebrow" style="color: var(--ink)"
+                  >Nothing leaves</span
+                ></span
+              >
+              <p class="lede" style="font-size: 0.9375rem">
+                There is no server. Every tool runs as JavaScript in your tab,
+                so tokens, client names and invoice totals are never transmitted
+                anywhere. Turn off your Wi-Fi and it all still works.
+              </p>
             </div>
+            <div class="reveal">
+              <span class="row mb-2" style="gap: 0.625rem"
+                ><i data-icon="zap" style="width: 1.25rem"></i
+                ><span class="eyebrow" style="color: var(--ink)"
+                  >Genuinely fast</span
+                ></span
+              >
+              <p class="lede" style="font-size: 0.9375rem">
+                No framework, no CSS pipeline, no icon font, no analytics. One
+                small stylesheet and a handful of scripts. Pages paint
+                immediately, even on a bad mobile connection.
+              </p>
+            </div>
+            <div class="reveal">
+              <span class="row mb-2" style="gap: 0.625rem"
+                ><i data-icon="save" style="width: 1.25rem"></i
+                ><span class="eyebrow" style="color: var(--ink)"
+                  >Yours to keep</span
+                ></span
+              >
+              <p class="lede" style="font-size: 0.9375rem">
+                Your profile, clients, presets and documents live in this
+                browser's storage. Export the lot to a JSON file whenever you
+                want, and import it on another machine.
+              </p>
+            </div>
+          </div>
         </div>
-    </section>
+      </section>
 
-    <footer class="site-footer">
+      <!-- FAQ -->
+      <section
+        id="faq"
+        class="section"
+        style="border-top: 1px solid var(--hairline)"
+      >
+        <div class="wrap">
+          <div class="reveal" style="max-width: 44rem; margin-bottom: 3rem">
+            <p class="eyebrow mb-2">Questions</p>
+            <h2
+              style="
+                font-size: clamp(2.25rem, 6vw, 4.5rem);
+                margin-bottom: 1.5rem;
+              "
+            >
+              COMMON QUESTIONS
+            </h2>
+          </div>
+
+          <div class="faq-list">
+            <details class="faq reveal">
+              <summary>Is DANDYAPP free to use?</summary>
+              <p>
+                Yes. Every tool is free, with no account, no sign-up and no ads.
+              </p>
+            </details>
+
+            <details class="faq reveal">
+              <summary>Is my data uploaded to a server?</summary>
+              <p>
+                No. There is no server. Every tool runs as JavaScript in your
+                browser tab, so tokens, client names and invoice totals are
+                never transmitted anywhere. Your profile, clients, presets and
+                documents are stored in your browser and can be exported to a
+                JSON file.
+              </p>
+            </details>
+
+            <details class="faq reveal">
+              <summary>Are the invoices SARS compliant?</summary>
+              <p>
+                The invoice template is built around the tax-invoice fields
+                required by the South African VAT Act, including 15% VAT
+                calculated inclusive or exclusive. DANDYAPP does not provide tax
+                or legal advice, so you remain responsible for confirming that
+                any document you issue is correct and complete for your
+                circumstances.
+              </p>
+            </details>
+
+            <details class="faq reveal">
+              <summary>Which currencies are supported?</summary>
+              <p>Invoices and quotes can be issued in ZAR, USD, EUR or GBP.</p>
+            </details>
+          </div>
+        </div>
+      </section>
+
+      <footer class="site-footer">
         <div class="footer-top">
-            <div>
-                <h2>DANDYAPP</h2>
-                <p>A small collection of fast, private tools built for the way South African developers actually work.</p>
+          <div>
+            <h2>DANDYAPP</h2>
+            <p>
+              A small collection of fast, private tools built for the way South
+              African developers actually work.
+            </p>
+          </div>
+          <div class="stack" style="gap: 1.5rem; align-items: flex-start">
+            <nav class="footer-links" aria-label="Footer">
+              <a href="toolbelt/">Toolbelt</a>
+              <a href="quote/">Quotes</a>
+              <a href="invoice/">Invoices</a>
+            </nav>
+            <div class="footer-credits">
+              <a
+                class="footer-credit"
+                href="https://www.strkr.co.za"
+                target="_blank"
+                rel="noopener"
+              >
+                Powered by STRKR Studio <i data-icon="arrow-up-right"></i>
+              </a>
+              <a
+                class="footer-credit"
+                href="https://www.matthewmckenzie.co.za"
+                target="_blank"
+                rel="noopener"
+              >
+                Made by Matthew McKenzie <i data-icon="arrow-up-right"></i>
+              </a>
             </div>
-            <div class="stack" style="gap:1.5rem;align-items:flex-start">
-                <nav class="footer-links" aria-label="Footer">
-                    <a href="toolbelt/">Toolbelt</a>
-                    <a href="quote/">Quotes</a>
-                    <a href="invoice/">Invoices</a>
-                </nav>
-                <a class="footer-credit" href="https://www.matthewmckenzie.co.za" rel="noopener">
-                    Made by Matthew McKenzie <i data-icon="arrow-up-right"></i>
-                </a>
-            </div>
+          </div>
         </div>
 
         <div class="footer-bottom">
-            <p>DANDYAPP does not provide financial, tax or legal advice. The invoice and quote templates aim to reflect the South African VAT Act's tax-invoice requirements, but you remain responsible for confirming that any document you issue is correct and complete for your circumstances.</p>
-            <p>Copyright &copy; 2026 DANDYAPP. All Rights Reserved. Designed and built by
-                <a href="https://www.matthewmckenzie.co.za" rel="noopener" style="text-decoration:underline">Matthew McKenzie</a>.</p>
+          <p>
+            DANDYAPP does not provide financial, tax or legal advice. The
+            invoice and quote templates aim to reflect the South African VAT
+            Act's tax-invoice requirements, but you remain responsible for
+            confirming that any document you issue is correct and complete for
+            your circumstances.
+          </p>
+          <p>
+            Copyright &copy; 2026 DANDYAPP. All Rights Reserved. Designed and
+            built by
+            <a
+              href="https://www.matthewmckenzie.co.za"
+              target="_blank"
+              rel="noopener"
+              style="text-decoration: underline"
+              >Matthew McKenzie</a
+            >. Powered by
+            <a
+              href="https://www.strkr.co.za"
+              target="_blank"
+              rel="noopener"
+              style="text-decoration: underline"
+              >STRKR Studio</a
+            >.
+          </p>
         </div>
-    </footer>
+      </footer>
+    </div>
 
-</div>
-
-<script src="js/core.js"></script>
-</body>
+    <script src="js/core.js"></script>
+  </body>
 </html>

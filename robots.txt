@@ -1,4 +1,5 @@
 User-agent: *
 Allow: /
 
+# Nothing here is generated server-side, so there is nothing to keep crawlers out of.
 Sitemap: https://dandyapp.co.za/sitemap.xml

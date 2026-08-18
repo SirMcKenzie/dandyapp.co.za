@@ -536,12 +536,44 @@ textarea { resize: vertical; min-height: 6rem; line-height: 1.6; }
 .footer-credit:hover { background: var(--white); color: var(--footer); border-color: var(--white); }
 .footer-credit svg { width: .8125rem; height: .8125rem; }
 
+/* Credit pills sit side by side on a wide footer, stacked on a narrow one. */
+.footer-credits { display: flex; flex-wrap: wrap; gap: .625rem; }
+
 .footer-bottom {
     border-top: 1px solid var(--footer-2); padding-top: 2rem;
     max-width: 56rem; margin: 0 auto; text-align: center;
 }
 .footer-bottom p { font-size: .6875rem; color: #52525b; line-height: 1.7; }
 .footer-bottom p + p { margin-top: .75rem; }
+
+/* --- FAQ ------------------------------------------------------------------ */
+
+.faq-list { max-width: 52rem; display: flex; flex-direction: column; }
+
+.faq {
+    border-top: 1px solid var(--border);
+    padding: 1.5rem 0;
+}
+.faq:last-child { border-bottom: 1px solid var(--border); }
+
+.faq summary {
+    display: flex; align-items: center; justify-content: space-between; gap: 1.5rem;
+    cursor: pointer; list-style: none;
+    font-size: 1.0625rem; font-weight: 600; letter-spacing: -.01em; color: var(--ink);
+}
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after {
+    content: "+"; flex: none;
+    font-size: 1.5rem; font-weight: 400; line-height: 1; color: var(--muted);
+    transition: transform .2s;
+}
+.faq[open] summary::after { transform: rotate(45deg); }
+.faq summary:hover { color: var(--muted); }
+
+.faq p {
+    margin-top: 1rem; max-width: 44rem;
+    font-size: .9375rem; line-height: 1.7; color: var(--muted);
+}
 
 /* --- Utilities (a deliberately tiny set) ---------------------------------- */
 
