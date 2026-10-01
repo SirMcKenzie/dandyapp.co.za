@@ -4,9 +4,9 @@
 
 # DANDY**APP**
 
-### Fast, private, browser-only tools for South African developers
+### A private invoicing app for South African businesses
 
-*Decode a token. Quote a job. Send the invoice.*<br>
+*Design your template. Keep your customers. Send the invoice. See who owes you.*<br>
 No accounts, no ads, no uploads, no build step.
 
 <br>
@@ -27,7 +27,7 @@ No accounts, no ads, no uploads, no build step.
 
 ![Vanilla JS](https://img.shields.io/badge/Vanilla%20JS-no%20framework-f7df1e?style=flat-square&labelColor=111827)
 ![No build step](https://img.shields.io/badge/Build%20step-none-16a34a?style=flat-square&labelColor=111827)
-![Zero dependencies](https://img.shields.io/badge/Dependencies-zero-6b7280?style=flat-square&labelColor=111827)
+![Dexie](https://img.shields.io/badge/Storage-Dexie%20%2F%20IndexedDB-6b7280?style=flat-square&labelColor=111827)
 ![Privacy](https://img.shields.io/badge/Data-never%20leaves%20the%20browser-dc2626?style=flat-square&labelColor=111827)
 
 </div>
@@ -38,115 +38,116 @@ No accounts, no ads, no uploads, no build step.
 
 ## What this is
 
-DANDYAPP is a three-tool static site at [dandyapp.co.za](https://dandyapp.co.za). Each tool exists because the free alternative is slower, buried in ads, or quietly posts your data to a server you don't control.
+DANDYAPP is a single-page invoicing app at [dandyapp.co.za](https://dandyapp.co.za). There is no backend: everything runs in the visitor's tab and is stored in the browser's IndexedDB through [Dexie](https://dexie.org), so customer names and invoice totals are never transmitted anywhere. Turn off Wi-Fi and it still works.
 
-There is no backend. Every tool is JavaScript running in the visitor's tab, so pasted tokens, client names and invoice totals are never transmitted anywhere. Turn off Wi-Fi and the whole site still works.
-
-| | Tool | What it does |
-|---|---|---|
-| **01** | [Dev Toolbelt](https://dandyapp.co.za/toolbelt/) | Ten everyday utilities behind one keystroke |
-| **02** | [Quote Builder](https://dandyapp.co.za/quote/) | Quote a job in under a minute, then convert it to an invoice |
-| **03** | [Invoice Generator](https://dandyapp.co.za/invoice/) | A SARS-compliant South African tax invoice with a print-perfect A4 PDF |
-
-<br>
-
-## Why it was built
-
-Three separate itches, one codebase:
-
-**The daily dev tools were scattered.** Formatting JSON, decoding a JWT, generating a UUID and converting an epoch each meant a different ad-heavy site, and every one of them took a paste of data that shouldn't leave the machine. The toolbelt puts all ten on one page behind `Cmd+K`, with nothing leaving the tab.
-
-**Invoicing tools don't understand South Africa.** Generic invoice generators produce a document that looks like an invoice but isn't a valid *tax* invoice, which means the recipient can't claim the input VAT. DANDYAPP models the VAT Act's requirements directly: 15% VAT inclusive or exclusive, the R5 000 full-tax-invoice threshold, and a live compliance panel that names each missing field rather than letting you discover the problem after the client has the PDF.
-
-**Quoting and invoicing are the same document twice.** A quote that's accepted should become an invoice without retyping it. One quote-to-invoice conversion carries the lines across, drops the extras the client declined, and references the original quote number.
-
-<br>
-
-## Tool detail
-
-### 01 - Dev Toolbelt
-
-Ten tools, one page, hash-routed (`/toolbelt/#jwt`). `Cmd/Ctrl+K` opens the command palette; `/` focuses the filter. Every tool's input is remembered in local storage, so a stray reload doesn't cost you a half-built regex.
-
-| Tool | Notes |
+| Area | What it does |
 |---|---|
-| **JSON** | Format, minify, validate with the exact error position, sort keys, collapsible tree |
-| **JWT** | Decode header, payload and signature, with the time claims humanised |
-| **Base64 & URL** | Both encodings, both directions, UTF-8 safe |
-| **Hash** | MD5, SHA-1, SHA-256, SHA-384, SHA-512, for text or a local file |
-| **IDs** | UUID v4, UUID v7, ULID, nanoid, plus a bulk generator |
-| **Time** | Epoch, ISO and human dates, always shown in SAST alongside UTC |
-| **Regex** | Live highlighting, capture groups, and South African presets (ID number, mobile, VAT number, postal code) |
-| **Diff** | Line-level LCS comparison of two blocks of text |
-| **Case & Slug** | camel, kebab, snake, title, slug, from one input |
-| **cURL** | Turn a pasted cURL command into `fetch`, axios or Python `requests` |
+| **Dashboard** | Invoiced, received, outstanding and overdue totals for this month, this year or all time, per currency, plus who owes you most |
+| **Invoices** | Every invoice stored and searchable, filterable by status and date, with mark-as-sent, void, duplicate and delete |
+| **Editor** | Live A4 preview, autosave, line items with reusable presets, SARS compliance warnings, and a payments panel |
+| **Customers** | A customer book (name, phone, email, note, plus optional address and VAT number). In an invoice you can type any name, or pick from the book. Customers can be imported from a CSV file |
+| **Templates** | A drag-and-drop designer with two saved layout slots (A and B) |
+| **Settings** | Business details and banking, which template is active, invoice defaults, and JSON backup / restore |
 
-### 02 - Quote Builder
+### Accounting
 
-Reusable service presets, optional line items the client can accept or decline, a deposit percentage on acceptance, valid-until dates, and one-click conversion into an invoice.
+An invoice is stored as **draft**, **sent** or **void**. Everything else is derived, never stored, so it cannot go stale: **part paid** once a payment exists, **paid** when payments cover the total, and **overdue** when a sent invoice passes its due date with a balance. Recording a payment on a draft marks it as sent.
 
-### 03 - Invoice Generator
+### Invoice numbers
 
-SARS tax-invoice fields, 15% VAT (inclusive, exclusive, or none), a saved business profile with logo and banking details, a client book that remembers who you've billed, ZAR / USD / EUR / GBP / AUD, and a print stylesheet that turns the live preview into a clean A4 PDF via the browser's own print dialog. Money is stored and calculated as integer cents throughout, because an invoice that's out by a cent is an invoice you have to reissue.
+The next number is always one more than the highest number still in use. Deleting your newest invoice hands its number back to the next new invoice (and deleting several from the end hands back several). Deleting one from the middle leaves a gap, because later invoices already exist and the numbers of existing invoices never shift. **Voiding burns a number for good**: it is recorded the moment an invoice is voided and stays used even if the invoice is un-voided and then deleted. The delete confirmation tells you which of these will happen.
+
+### Your data lives in the browser
+
+The bottom of the dashboard carries a slim, collapsed **Important** banner that opens smoothly. It says the data is stored only in this browser and what erases it (clearing cookies and site data, private windows, a reset browser), and its one-click **Download a backup now** remembers when you last took one and turns the status red when it is over 30 days old. It also carries an **I want permanent storage with your app** button. This site has no analytics, so the button simply opens a page or form you own and you count visits or submissions there. Set its address in `js/config.js` (`permanentStorageUrl`); while that is empty the button explains it is not set up instead of opening a dead page.
+
+### Templates
+
+Invoices store no layout. Every invoice, old and new, is drawn from the **active template**, so editing a layout or switching between A and B re-flows all of them at once.
+
+The designer is a free-form canvas, made safe by rules enforced in one place (`Components.validate` in `js/components.js`), which every template passes through on load, save and edit:
+
+- Positions are in millimetres on the A4 safe area (15 mm margin) and snap to a 5 mm grid.
+- A component cannot leave the safe area, overlap another component, or go beyond its minimum and maximum size. An illegal drag snaps back.
+- **Line items**, **invoice details**, **business**, **customer** and **totals** are required and cannot be deleted, so a tax invoice never loses a SARS field.
+- **Line items** is a full-width band that grows with the number of rows. Everything below it is pushed down, long invoices continue on a new page with the header repeated, and the content below the band moves as one piece, never split.
+- A box whose content does not fit is flagged in the designer rather than silently cut off in print.
+- A corrupt or outdated template is repaired or replaced with a default, so the renderer never sees invalid geometry.
+
+### Typefaces
+
+Each template stores a **body** font and an optional **heading** font (used for the title, names and the grand total), chosen in the designer's Typeface panel.
+
+- **Built-in:** 13 open-licence families (Poppins, Inter, DM Sans, Montserrat, Open Sans, Lato, Nunito, Source Sans 3, Roboto, Merriweather, Playfair Display, Lora, Roboto Mono), self-hosted in `fonts/` as latin-subset woff2. Nothing is requested from a third party, they work offline, and a browser only downloads the ones in use. Their licences are in `fonts/licenses/`.
+- **Your own:** upload a `.woff2`, `.woff`, `.ttf` or `.otf` file (up to 1.5 MB). It is checked by actually loading it, stored in the browser database as a data URL, and included in backups. The user is responsible for being licensed to use it.
+- A template stores only font ids. If a font has been deleted, the template falls back to Poppins rather than rendering with a missing face.
+
+### Customer CSV import
+
+*Customers > Import CSV* reads only the columns the app has a place for: name (or company, customer, client, or first name + surname), phone (mobile, cell), email, note (notes, comments), address (or street, city, postal code and similar, joined into one) and VAT number. Before anything is saved it lists the columns it will use and **names every column it will leave out**. Existing customers (matched by name) are skipped unless you choose to update them, and empty cells never erase what you already have. Comma, semicolon and tab delimiters are detected, and Excel's BOM is handled.
+
+### SARS VAT
+
+15% VAT inclusive, exclusive or none; the R5 000 full-tax-invoice threshold; and a live panel naming each missing field instead of letting you find out after the customer has the PDF. Money is integer cents throughout.
 
 <br>
 
 ## How it's built
 
-No framework, no bundler, no package manager, no CSS pipeline, no icon font, no analytics. Just HTML, one design-system stylesheet, and a handful of scripts. Pages paint immediately, even on a bad mobile connection. The only render-blocking external request is the Poppins webfont.
+No framework, no bundler, no package manager. Plain scripts share a few globals, and Dexie is vendored in `js/vendor/` so the app works offline.
 
 ```
 .
-├── index.html              # Landing page
-├── toolbelt/index.html     # Tool 01
-├── quote/index.html        # Tool 02
-├── invoice/index.html      # Tool 03
+├── index.html              # App shell: nav + #view, hash-routed
+├── invoice/index.html      # Redirect from the old /invoice/ URL
 ├── css/
-│   ├── dandy.css           # Design system - tokens, layout, header, footer
-│   ├── toolbelt.css        # Toolbelt rail, stage, command palette
-│   └── doc.css             # Document editor + the A4 print stylesheet
+│   ├── dandy.css           # Design system: tokens, header, buttons, forms
+│   └── app.css             # Views, template components, designer, print
 ├── js/
-│   ├── core.js             # Storage, inline SVG icons, toast, copy, reveal, mobile nav
-│   ├── billing.js          # Pure billing model - money, totals, VAT, compliance
-│   ├── doc-editor.js       # Shared editor driving both /quote/ and /invoice/
-│   └── toolbelt/
-│       ├── index.js        # Registry, hash routing, filter, Cmd+K palette
-│       └── *.js            # One self-contained module per tool
-├── assets/                 # Favicon + hero background
+│   ├── vendor/dexie.min.js # IndexedDB wrapper
+│   ├── config.js           # Site settings you may want to change (the permanent storage link)
+│   ├── core.js             # Icons, toast, escaping, mobile nav, legacy localStorage reader
+│   ├── fonts.js            # Built-in + uploaded typefaces, CSS font stacks, loading
+│   ├── csv.js              # CSV parsing and customer column mapping (pure)
+│   ├── billing.js          # Pure model: money, totals, VAT, payments, derived status, compliance
+│   ├── components.js       # Template component registry, guard rails, renderers
+│   ├── layout.js           # Measures and paginates an invoice into A4 pages
+│   ├── db.js               # The only file that touches storage; migration; backup
+│   ├── app.js              # Hash router and shared helpers
+│   └── views/              # dashboard, invoices, editor, customers, designer, settings
+├── fonts/                  # Self-hosted woff2 files and their licences
+├── assets/                 # Open Graph image
 ├── robots.txt
 └── sitemap.xml
 ```
 
 **Design notes worth knowing before editing:**
 
-- `js/core.js` exposes a single `Dandy` global (storage, icons, toast, copy, download, escaping). It loads on every page and hydrates `<i data-icon="name">` into inline SVG, which is why there's no icon font.
-- `Dandy.Store` namespaces everything under `dandy.v1.` and degrades to an in-memory object when local storage is unavailable (Safari private browsing) or full. Because that storage is volatile, every document page offers **Export backup** / **Import backup** as a JSON file.
-- `js/billing.js` is pure data and arithmetic - no DOM, no rendering. All money is integer cents.
-- `js/doc-editor.js` is one implementation serving both `/quote/` and `/invoice/`. The `kind` decides labels, which panels show, and which actions are offered; the line engine, totals, client book and printed sheet are shared.
-- Each toolbelt module calls `Toolbelt.register()` and knows nothing about the rail, the palette or persistence. It receives a DOM node to fill and a namespaced `remember`/`recall` pair.
-- The mobile drawer is generated at runtime from each page's own `.pill-nav`, so the two navigations can't drift apart.
+- `billing.js` is pure data and arithmetic, with no DOM and no storage.
+- `layout.js` is the single source of truth for what a page looks like. The preview, the printed PDF and the designer all use the same component renderers, so what you design is what prints.
+- A static host may serve a mix of old and new script files for a while after a deploy, because browsers cache subresources heuristically. If you deploy often, add a version query string (`?v=...`) to the script and stylesheet URLs in `index.html`.
+- Routes: `#/`, `#/invoices`, `#/invoice/new`, `#/invoice/:id`, `#/customers[/:id|new]`, `#/templates/A|B`, `#/settings`.
+- A new invoice is only written to the database once something is edited, and its serial number is a peek that only advances when a higher number is saved, so opening "New invoice" never burns a number.
+- Invoices keep a **snapshot** of the customer details they were issued with, so editing a customer never rewrites an invoice you already sent.
+- On first run, data from the earlier localStorage version (invoices, customers, presets, profile, counter) is imported once into IndexedDB. Quotes are not carried over.
+- IndexedDB can be cleared by the browser, so Settings offers **Export backup** / **Import backup** as a JSON file.
 
 <br>
 
 ## Running it locally
 
-There's nothing to install and nothing to build. Clone it and serve the folder:
+There's nothing to install and nothing to build. Serve the folder from its root (the app uses root-relative paths):
 
 ```bash
-git clone <repo-url> dandyapp-website
-cd dandyapp-website
-
 python3 -m http.server 8000
 # or: npx serve .
 ```
 
 Then open <http://localhost:8000>.
 
-Opening `index.html` straight off the filesystem mostly works too, but `file://` isn't a secure context, so the clipboard falls back to the legacy copy path and hashing needs `crypto.subtle` over http(s).
-
 ### Deploying
 
-Upload the folder to any static host. There is no server-side component, no environment configuration and no database. If the domain changes, update the absolute URLs in `sitemap.xml`, `robots.txt` and the `canonical` / `og:url` tags in each page's `<head>`.
+Upload the folder to any static host. If the domain changes, update the absolute URLs in `sitemap.xml`, `robots.txt` and the `canonical` / `og:url` tags in `index.html`.
 
 <br>
 
