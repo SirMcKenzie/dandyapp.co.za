@@ -389,14 +389,10 @@
 
 .about { max-width: 96rem; margin: 0 auto; padding: 0 1rem 3.5rem; }
 @media (min-width: 768px) { .about { padding: 0 2rem 4.5rem; } }
-.about h2 { font-size: clamp(1.5rem, 3.4vw, 2.25rem); letter-spacing: -.04em; margin-bottom: .75rem; }
-.about .about-lead { color: var(--muted); font-weight: 300; line-height: 1.8; max-width: 52rem; margin-bottom: 1.75rem; }
+.about h2 { font-size: clamp(1.5rem, 3.4vw, 2.25rem); font-weight: 500; letter-spacing: -.03em; margin-bottom: .75rem; }
+.about .about-lead { color: var(--muted); font-weight: 300; line-height: 1.8; max-width: 52rem; margin-bottom: 2.5rem; }
 .about .about-sub { font-size: 1.25rem; margin: 0 0 .5rem; }
 
-.feat-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); margin-bottom: 2.5rem; }
-.feat { background: #fff; border: 1px solid var(--border); border-radius: var(--r-inner); padding: 1.25rem 1.375rem; }
-.feat h3 { font-size: 1rem; letter-spacing: -.02em; margin-bottom: .375rem; }
-.feat p { font-size: .8125rem; line-height: 1.7; color: var(--muted); }
 
 .faq-list { max-width: 52rem; }
 .faq { border-top: 1px solid var(--border); padding: 1rem 0; }
