@@ -62,15 +62,16 @@ var Components = (function () {
                 font: { body: 'poppins', heading: '' },
                 components: [
                     box('logo', 0, 0, 50, 18),
-                    box('business', 0, 20, 95, 30),
+                    box('business', 0, 20, 95, 38),
                     box('invoiceMeta', 105, 0, 75, 40, { align: 'right' }),
-                    box('divider', 0, 52, 180, 1),
-                    box('customer', 0, 58, 85, 32),
-                    box('items', 0, 95, 180, 90),
-                    box('notes', 0, 190, 100, 30),
-                    box('terms', 0, 222, 100, 25),
-                    box('totals', 110, 190, 70, 34),
-                    box('bank', 105, 228, 75, 36)
+                    box('divider', 0, 58, 180, 1),
+                    box('customer', 0, 64, 85, 32),
+                    box('items', 0, 100, 180, 74),
+                    box('notes', 0, 178, 100, 30),
+                    box('terms', 0, 212, 100, 26),
+                    // Five rows once a payment exists (subtotal, VAT, total, paid, balance due).
+                    box('totals', 110, 178, 70, 44),
+                    box('bank', 105, 226, 75, 36)
                 ]
             };
         },
@@ -82,12 +83,12 @@ var Components = (function () {
                 components: [
                     box('logo', 0, 0, 45, 20),
                     box('invoiceMeta', 100, 0, 80, 36, { align: 'right', accent: accent }),
-                    box('business', 0, 24, 90, 28, { fontSize: 8.5 }),
-                    box('customer', 0, 58, 90, 28, { accent: accent }),
-                    box('items', 0, 92, 180, 90),
-                    box('notes', 0, 188, 90, 36),
-                    box('terms', 0, 228, 90, 30, { fontSize: 8 }),
-                    box('totals', 100, 188, 80, 36, { accent: accent }),
+                    box('business', 0, 24, 90, 34, { fontSize: 8.5 }),
+                    box('customer', 0, 62, 90, 34, { accent: accent }),
+                    box('items', 0, 98, 180, 78),
+                    box('notes', 0, 180, 90, 36),
+                    box('terms', 0, 220, 90, 30, { fontSize: 8 }),
+                    box('totals', 100, 180, 80, 44, { accent: accent }),
                     box('bank', 100, 228, 80, 36)
                 ]
             };

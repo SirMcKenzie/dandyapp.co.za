@@ -184,12 +184,12 @@
 .cmp .pre { white-space: pre-line; }
 .cmp-items { overflow: visible; }
 
-.c-label { font-size: .75em; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: color-mix(in srgb, var(--accent, #111827) 40%, white); margin-bottom: .3em !important; }
+.c-label { font-size: .75em; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: #9ca3af; color: color-mix(in srgb, var(--accent, #111827) 40%, white); margin-bottom: .3em !important; }
 .c-strong { font-weight: 700; }
 .c-big { font-size: 1.2em; line-height: 1.3; }
-.c-muted { color: color-mix(in srgb, var(--accent, #111827) 75%, white); font-size: .95em; }
-.c-faint { color: color-mix(in srgb, var(--accent, #111827) 40%, white); font-size: .9em; }
-.c-body { color: color-mix(in srgb, var(--accent, #111827) 85%, white); font-size: .95em; }
+.c-muted { color: #4b5563; color: color-mix(in srgb, var(--accent, #111827) 75%, white); font-size: .95em; }
+.c-faint { color: #9ca3af; color: color-mix(in srgb, var(--accent, #111827) 40%, white); font-size: .9em; }
+.c-body { color: #374151; color: color-mix(in srgb, var(--accent, #111827) 85%, white); font-size: .95em; }
 .c-title { font-size: 2.1em; font-weight: 900; letter-spacing: -.04em; line-height: 1.1; color: var(--accent); }
 .c-muted b { color: var(--accent, #111827); }
 
@@ -202,13 +202,13 @@
 
 .cmp-bank { padding: 2.5mm 3mm; background: #f9fafb; border-radius: 1.5mm; }
 .c-row { display: flex; justify-content: space-between; gap: 3mm; font-size: .95em; }
-.c-row span:first-child { color: color-mix(in srgb, var(--accent, #111827) 60%, white); }
+.c-row span:first-child { color: #6b7280; color: color-mix(in srgb, var(--accent, #111827) 60%, white); }
 .c-row span:last-child { font-weight: 600; text-align: right; }
 
 .c-items { width: 100%; border-collapse: separate; border-spacing: 0; }
 .c-items th {
     text-align: left; font-size: .75em; font-weight: 800; letter-spacing: .1em; text-transform: uppercase;
-    color: color-mix(in srgb, var(--accent, #111827) 60%, white); padding: .5em .5em .5em 0; border-bottom: .4mm solid var(--accent, #111827);
+    color: #6b7280; color: color-mix(in srgb, var(--accent, #111827) 60%, white); padding: .5em .5em .5em 0; border-bottom: .4mm solid var(--accent, #111827);
 }
 .c-items td { padding: .6em .5em .6em 0; border-bottom: .2mm solid #eceff3; vertical-align: top; line-height: 1.45; }
 .c-items td.d { font-weight: 600; }
@@ -309,7 +309,7 @@
 @media print {
     html, body { background: #fff !important; padding: 0 !important; margin: 0 !important; }
 
-    .site-header, .burger, .nav-drawer, .site-footer, .toolbar, .page-head,
+    .site-header, .burger, .nav-drawer, .site-footer, .toolbar, .page-head, .about,
     .editor .form-pane, .no-print, #toast { display: none !important; }
 
     .slab { box-shadow: none !important; border-radius: 0 !important; background: #fff !important; overflow: visible !important; }
@@ -381,3 +381,37 @@
 @media (prefers-reduced-motion: reduce) {
     .imp-body, .imp-chev { transition: none; }
 }
+
+/* The toolbar is pill-shaped on one row; once it wraps on a phone, a pill looks like an egg. */
+@media (max-width: 720px) { .toolbar { border-radius: var(--r-inner); } }
+
+/* --- About section: real, crawlable text under the dashboard ---------------------------------- */
+
+.about { max-width: 96rem; margin: 0 auto; padding: 0 1rem 3.5rem; }
+@media (min-width: 768px) { .about { padding: 0 2rem 4.5rem; } }
+.about h2 { font-size: clamp(1.5rem, 3.4vw, 2.25rem); letter-spacing: -.04em; margin-bottom: .75rem; }
+.about .about-lead { color: var(--muted); font-weight: 300; line-height: 1.8; max-width: 52rem; margin-bottom: 1.75rem; }
+.about .about-sub { font-size: 1.25rem; margin: 0 0 .5rem; }
+
+.feat-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); margin-bottom: 2.5rem; }
+.feat { background: #fff; border: 1px solid var(--border); border-radius: var(--r-inner); padding: 1.25rem 1.375rem; }
+.feat h3 { font-size: 1rem; letter-spacing: -.02em; margin-bottom: .375rem; }
+.feat p { font-size: .8125rem; line-height: 1.7; color: var(--muted); }
+
+.faq-list { max-width: 52rem; }
+.faq { border-top: 1px solid var(--border); padding: 1rem 0; }
+.faq:last-child { border-bottom: 1px solid var(--border); }
+.faq summary {
+    display: flex; align-items: center; justify-content: space-between; gap: 1.5rem;
+    cursor: pointer; list-style: none; font-size: 1rem; font-weight: 600; letter-spacing: -.01em;
+}
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after { content: "+"; flex: none; font-size: 1.5rem; font-weight: 400; line-height: 1; color: var(--muted); transition: transform .2s; }
+.faq[open] summary::after { transform: rotate(45deg); }
+.faq summary:hover { color: var(--muted); }
+.faq p { margin-top: .75rem; font-size: .875rem; line-height: 1.75; color: var(--muted); }
+
+
+/* --- A page another tab has locked: read-only, with the reason shown above it ------------------- */
+.is-locked .d-stage, .is-locked .palette { pointer-events: none; opacity: .7; }
+.lock-banner { margin-bottom: 1rem; }

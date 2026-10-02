@@ -8,6 +8,7 @@ var EditorView = (function () {
     'use strict';
 
     var esc = App.esc;
+    var SAVE_FAILED = new Error('save failed');     // already reported to the user by saveNow
 
     function mount(el, params) {
         var routeId = params[0];
@@ -20,14 +21,22 @@ var EditorView = (function () {
                 el.innerHTML = '<div class="panel empty">That invoice no longer exists. <a href="#/invoices" style="text-decoration:underline">Back to invoices</a></div>';
                 return null;
             }
-            return DB.paymentsFor(d[0].id).then(function (pays) {
-                return run(el, d[0], routeId !== 'new', pays, d[1], d[2], d[3], d[4]);
+            return Promise.all([DB.paymentsFor(d[0].id), Locks.acquire(Locks.names.invoice(d[0].id))]).then(function (r) {
+                return Locks.guard(r[1], function () {
+                    return run(el, d[0], routeId !== 'new', r[0], d[1], d[2], d[3], d[4], r[1]);
+                });
             });
         });
     }
 
-    function run(el, inv, persisted, payments, profile, customers, template, presets) {
+    /* `lock` is null when another tab is editing this invoice: this tab then shows it read-only. */
+    function run(el, inv, persisted, payments, profile, customers, template, presets, lock) {
+        var locked = !lock;
+        var cancelWait = null;
+        // The number this brand-new invoice was offered; cleared if the user types their own.
+        var autoNumber = persisted ? null : inv.number;
         var dirty = false;
+        var saveFailed = false;
         var active = true;
         var saveTimer = null, previewTimer = null;
         var chain = Promise.resolve();
@@ -54,21 +63,31 @@ var EditorView = (function () {
             chain = chain.then(function () {
                 if (!dirty) return;
                 dirty = false;
-                return DB.saveInvoice(inv).then(function () {
+                saveFailed = false;
+                return DB.saveInvoice(inv, (!persisted && autoNumber) ? { autoNumber: autoNumber } : null).then(function () {
                     if (!persisted) {
                         persisted = true;
+                        autoNumber = null;
                         // Same page, real id - no re-render, no history entry.
                         // Skipped if the user already navigated away during the save.
                         if (active) history.replaceState(null, '', '#/invoice/' + inv.id);
                     }
                     setState('Saved');
+                    var field = byId('d-number');
+                    if (field && field.value !== inv.number) {
+                        field.value = inv.number;
+                        updateMeta(); schedulePreview();
+                        Dandy.toast('Another tab used that number first, so this invoice is ' + inv.number);
+                    }
                 });
             }).catch(function (err) {
                 dirty = true;
+                saveFailed = true;
                 setState('Could not save');
                 Dandy.toast('Could not save: ' + err.message);
             });
-            return chain;
+            // Resolves to whether the invoice is safely stored, so callers can stop if it is not.
+            return chain.then(function () { return !saveFailed; });
         }
 
         function changed() {
@@ -110,6 +129,30 @@ var EditorView = (function () {
             var pane = byId('preview');
             if (!pane) return;
             Layout.mount(pane, Layout.render(inv, template, profile, payments));
+            checkFit(pane);
+        }
+
+        /* A box that is too small for its content silently hides the rest of it when
+           printed, and on a tax invoice that can be the VAT number. Say so. */
+        function checkFit(pane) {
+            var cut = [];
+            Dandy.els('.page .cmp', pane).forEach(function (box) {
+                var m = /cmp-([A-Za-z]+)/.exec(box.className);
+                var type = m && m[1];
+                if (!type || type === 'items' || type === 'divider' || type === 'logo' || !Components.TYPES[type]) return;
+                if (box.scrollHeight > box.clientHeight + 1 || box.scrollWidth > box.clientWidth + 1) {
+                    var name = Components.TYPES[type].label;
+                    if (cut.indexOf(name) === -1) cut.push(name);
+                }
+            });
+            var note = byId('fit-warning');
+            if (!note) return;
+            note.hidden = !cut.length;
+            if (cut.length) {
+                note.innerHTML = Dandy.icon('alert') + '<span><b>Some text is cut off on this invoice.</b><br>' +
+                    'The box for ' + cut.map(esc).join(', ') + ' is too small for what it has to show. ' +
+                    '<a href="#/templates/' + esc(template.slot) + '" style="text-decoration:underline">Make it bigger in Templates</a>.</span>';
+            }
         }
 
         /* --- Form bindings ---------------------------------------------------------- */
@@ -150,6 +193,7 @@ var EditorView = (function () {
                 '<button class="btn btn-dark btn-sm" id="t-print">' + Dandy.icon('printer') + 'Download PDF</button>' +
             '</div>' +
             '<p class="note note-warn mb-2 no-print" id="compliance" hidden></p>' +
+            '<p class="note note-warn mb-2 no-print" id="fit-warning" hidden></p>' +
             (profile.name ? '' : '<p class="note note-info mb-2 no-print">' + Dandy.icon('info') +
                 '<span>Your business details are empty. <a href="#/settings" style="text-decoration:underline">Add them in Settings</a> so they appear on every invoice.</span></p>') +
             '<div class="editor"><div class="form-pane no-print" id="form">' + formMarkup() + '</div>' +
@@ -273,6 +317,10 @@ var EditorView = (function () {
         function pickCustomer(c) {
             inv.customerId = c.id;
             inv.client = { name: c.name, email: c.email || '', phone: c.phone || '', address: c.address || '', vatNo: c.vatNo || '' };
+            // The name box is not one of the bound fields, so fill() does not touch it. Without
+            // this it keeps whatever prefix was typed, and the next keystroke would overwrite
+            // the picked customer with that stale text.
+            byId('c-name').value = c.name;
             fill();
             hidePicker();
             changed();
@@ -433,7 +481,8 @@ var EditorView = (function () {
             var cents = Billing.toCents(byId('p-amount').value);
             if (cents <= 0) { Dandy.toast('Enter an amount'); return; }
             dirty = true;                       // a payment needs the invoice row to exist
-            saveNow().then(function () {
+            saveNow().then(function (saved) {
+                if (!saved) throw SAVE_FAILED;      // no invoice row, so a payment would be an orphan
                 return DB.addPayment({
                     invoiceId: inv.id, date: byId('p-date').value || Billing.today(),
                     amountCents: cents, method: byId('p-method').value, note: byId('p-note').value.trim()
@@ -447,7 +496,8 @@ var EditorView = (function () {
                     dirty = true;
                     return saveNow();
                 }
-            }).then(reloadPayments).then(function () { Dandy.toast('Payment recorded'); });
+            }).then(reloadPayments).then(function () { Dandy.toast('Payment recorded'); })
+              .catch(function (err) { if (err !== SAVE_FAILED) Dandy.toast('Could not record the payment: ' + err.message); });
         }
 
         /* --- Wiring ---------------------------------------------------------------------------- */
@@ -456,7 +506,7 @@ var EditorView = (function () {
         bind('c-phone', theClient, 'phone');
         bind('c-address', theClient, 'address');
         bind('c-vatno', theClient, 'vatNo');
-        bind('d-number', theInv, 'number', checkNumber);
+        bind('d-number', theInv, 'number', function () { autoNumber = null; checkNumber(); });
         bind('d-date', theInv, 'date');
         bind('d-duedate', theInv, 'dueDate');
         bind('d-reference', theInv, 'reference');
@@ -531,10 +581,13 @@ var EditorView = (function () {
 
         byId('t-dup').addEventListener('click', function () {
             dirty = true;
-            saveNow().then(function () { return DB.duplicateInvoice(inv); }).then(function (copy) {
+            saveNow().then(function (saved) {
+                if (!saved) throw SAVE_FAILED;
+                return DB.duplicateInvoice(inv);
+            }).then(function (copy) {
                 Dandy.toast('Duplicated as ' + copy.number);
                 App.go('#/invoice/' + copy.id);
-            });
+            }).catch(function (err) { if (err !== SAVE_FAILED) Dandy.toast('Could not duplicate: ' + err.message); });
         });
 
         byId('t-print').addEventListener('click', function () {
@@ -548,6 +601,7 @@ var EditorView = (function () {
         });
 
         function onKey(e) {
+            if (locked) return;
             if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') {
                 e.preventDefault();
                 dirty = true;
@@ -555,6 +609,10 @@ var EditorView = (function () {
             }
         }
         document.addEventListener('keydown', onKey);
+
+        /* Phones often skip beforeunload, so also save the moment the page is hidden. */
+        function onHide() { if (document.visibilityState === 'hidden' && dirty && !locked) saveNow(); }
+        document.addEventListener('visibilitychange', onHide);
 
         fill();
         renderLines();
@@ -565,14 +623,33 @@ var EditorView = (function () {
         Fonts.load(template.font).then(function () { if (active) renderPreview(); });
         Dandy.hydrateIcons(el);
 
+        if (locked) {
+            el.insertAdjacentHTML('afterbegin', Locks.bannerHtml('This invoice'));
+            Dandy.hydrateIcons(el);
+            Locks.freeze(el.querySelector('#form'));
+            Locks.freeze(el.querySelector('.toolbar'), '#t-print');       // printing a read-only copy is harmless
+            // The other tab let go: load the invoice again, fresh from the database, and edit it.
+            cancelWait = Locks.whenFree(Locks.names.invoice(inv.id), function () { if (active) App.reload(); });
+        }
+
         return {
             destroy: function () {
                 active = false;
                 document.removeEventListener('keydown', onKey);
+                document.removeEventListener('visibilitychange', onHide);
                 clearTimeout(previewTimer);
-                return dirty ? saveNow() : chain;
+                if (cancelWait) cancelWait();
+                var release = function () { if (lock) lock.release(); };
+                // Let the last edit reach the database before the lock is handed over.
+                return (dirty ? saveNow() : chain).then(release, release);
             },
-            refresh: renderPreview
+            refresh: renderPreview,
+            // Called as the tab closes: start saving anything still waiting, and say whether there was any.
+            pendingSave: function () {
+                if (locked || !dirty) return false;
+                saveNow();
+                return true;
+            }
         };
     }
 

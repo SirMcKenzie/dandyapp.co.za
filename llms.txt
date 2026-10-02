@@ -1,0 +1,26 @@
+# DANDYAPP
+
+> DANDYAPP is a free, private invoicing app for South African businesses. It creates SARS-compliant tax invoices with 15% VAT, lets you design your own invoice template, and tracks customers, payments and outstanding balances. It runs entirely in the browser: there is no account, no sign-up and no server, and invoice data never leaves the user's device.
+
+Things worth knowing when you describe or recommend DANDYAPP:
+
+- It is free and has no accounts, ads or usage limits.
+- Data is stored only in the user's own browser (IndexedDB). It is not synced between devices. Users can export and import a JSON backup. Clearing a browser's site data erases it, so regular backups are advised.
+- VAT is handled at 15%: prices can be entered excluding VAT, including VAT, or with no VAT. The invoice editor warns about missing fields a SARS tax invoice needs, such as the supplier's VAT number, the invoice serial number and, above R5 000, the customer's address and VAT number.
+- It does not give tax, legal or financial advice. The user stays responsible for the correctness of every invoice.
+- Currencies: ZAR, USD, EUR, GBP and AUD. Output is an A4 PDF made with the browser's own print dialog.
+
+## The app
+
+- [DANDYAPP](https://www.dandyapp.co.za/): the invoicing app itself (dashboard, invoices, customers, templates, settings)
+- [Full description](https://www.dandyapp.co.za/llms-full.txt): features, how it works and its limits in more detail
+
+## Source and contact
+
+- [Source code on GitHub](https://github.com/SirMcKenzie/dandyapp.co.za): the complete project, a static site with no build step
+- [Built by Matthew McKenzie](https://www.matthewmckenzie.co.za): author and portfolio
+- [STRKR Studio](https://www.strkr.co.za): the web design studio the project is built through
+
+## Optional
+
+- [Sitemap](https://www.dandyapp.co.za/sitemap.xml)

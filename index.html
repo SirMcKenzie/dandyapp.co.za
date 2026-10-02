@@ -2,85 +2,192 @@
 <html lang="en-ZA">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 
     <title>Free SARS-Compliant Invoice App (15% VAT) | DANDYAPP</title>
-    <meta name="description" content="Free South African invoicing app. Design your own invoice template with drag and drop, keep a customer book, record payments and see what you are owed. SARS-compliant 15% VAT tax invoices and a print-perfect A4 PDF. Runs entirely in your browser - nothing is uploaded." />
+    <meta name="description" content="Free South African invoice app: design your template, keep customers, track payments and print SARS-compliant 15% VAT invoices. Private, in your browser." />
     <meta name="keywords" content="invoice generator south africa, tax invoice template south africa, sars tax invoice requirements, vat invoice 15%, free invoice app za, invoice template designer, freelancer invoice south africa, small business invoicing" />
-    <link rel="canonical" href="https://dandyapp.co.za/" />
+    <link rel="canonical" href="https://www.dandyapp.co.za/" />
+    <link rel="alternate" hreflang="en-za" href="https://www.dandyapp.co.za/" />
+    <link rel="alternate" hreflang="x-default" href="https://www.dandyapp.co.za/" />
     <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
     <meta name="author" content="Matthew McKenzie" />
     <meta name="theme-color" content="#f8fafc" />
+    <meta name="color-scheme" content="light" />
     <meta name="format-detection" content="telephone=no" />
+    <meta name="geo.region" content="ZA" />
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="preload" href="/fonts/poppins-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/fonts/poppins-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/fonts/poppins-latin-900-normal.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="/css/fonts.css">
     <link rel="stylesheet" href="/css/dandy.css">
     <link rel="stylesheet" href="/css/app.css">
 
-    <link rel="icon" href="/favicon.ico" sizes="32x32">
-    <link rel="icon" href="/favicon-96x96.png" type="image/png" sizes="96x96">
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180">
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
     <link rel="manifest" href="/site.webmanifest">
+    <meta name="application-name" content="DANDYAPP" />
     <meta name="apple-mobile-web-app-title" content="DANDYAPP" />
-
-    <meta name="geo.region" content="ZA-GP" />
-    <meta name="geo.placename" content="Johannesburg, Gauteng, South Africa" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://dandyapp.co.za/" />
+    <meta property="og:url" content="https://www.dandyapp.co.za/" />
     <meta property="og:site_name" content="DANDYAPP" />
-    <meta property="og:title" content="Invoice App | DANDYAPP" />
-    <meta property="og:description" content="Design your invoice template, keep customers, record payments. SARS-compliant, private, runs in your browser." />
-    <meta property="og:image" content="https://dandyapp.co.za/assets/og-image.png" />
+    <meta property="og:title" content="DANDYAPP - Free SARS-Compliant Invoice App" />
+    <meta property="og:description" content="Design your own invoice template, keep customers and track payments. SARS-compliant 15% VAT, free and private: it runs in your browser." />
+    <meta property="og:locale" content="en_ZA" />
+    <meta property="og:image" content="https://www.dandyapp.co.za/assets/og-image.jpg" />
+    <meta property="og:image:secure_url" content="https://www.dandyapp.co.za/assets/og-image.jpg" />
+    <meta property="og:image:type" content="image/jpeg" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="DANDYAPP - a private invoicing app for South African businesses" />
-    <meta property="og:locale" content="en_ZA" />
+    <meta property="og:image:alt" content="DANDYAPP: Invoices for South African businesses, with a sample SARS tax invoice." />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Invoice App | DANDYAPP" />
-    <meta name="twitter:description" content="Design your invoice template, keep customers, record payments. SARS-compliant, private, runs in your browser." />
-    <meta name="twitter:image" content="https://dandyapp.co.za/assets/og-image.png" />
+    <meta name="twitter:title" content="DANDYAPP - Free SARS-Compliant Invoice App" />
+    <meta name="twitter:description" content="Design your own invoice template, keep customers and track payments. SARS-compliant 15% VAT, free and private: it runs in your browser." />
+    <meta name="twitter:image" content="https://www.dandyapp.co.za/assets/og-image.jpg" />
+    <meta name="twitter:image:alt" content="DANDYAPP: Invoices for South African businesses, with a sample SARS tax invoice." />
+
+    <script src="/js/vendor/dexie.min.js" defer></script>
+    <script src="/js/config.js" defer></script>
+    <script src="/js/core.js" defer></script>
+    <script src="/js/billing.js" defer></script>
+    <script src="/js/fonts.js" defer></script>
+    <script src="/js/components.js" defer></script>
+    <script src="/js/layout.js" defer></script>
+    <script src="/js/csv.js" defer></script>
+    <script src="/js/locks.js" defer></script>
+    <script src="/js/db.js" defer></script>
+    <script src="/js/app.js" defer></script>
+    <script src="/js/views/dashboard.js" defer></script>
+    <script src="/js/views/invoices.js" defer></script>
+    <script src="/js/views/editor.js" defer></script>
+    <script src="/js/views/customers.js" defer></script>
+    <script src="/js/views/designer.js" defer></script>
+    <script src="/js/views/settings.js" defer></script>
 
     <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
     {
-        "@context": "https://schema.org",
-        "@graph": [
-            {
-                "@type": "WebSite",
-                "@id": "https://dandyapp.co.za/#website",
-                "url": "https://dandyapp.co.za/",
-                "name": "DANDYAPP",
-                "inLanguage": "en-ZA"
-            },
-            {
-                "@type": "SoftwareApplication",
-                "@id": "https://dandyapp.co.za/#app",
-                "name": "DANDYAPP Invoice App",
-                "url": "https://dandyapp.co.za/",
-                "applicationCategory": "BusinessApplication",
-                "operatingSystem": "Any (web browser)",
-                "browserRequirements": "Requires JavaScript. Works offline after first load.",
-                "description": "Design your invoice template with drag and drop, keep a customer book, record payments and print a SARS-compliant A4 tax invoice.",
-                "image": "https://dandyapp.co.za/assets/og-image.png",
-                "inLanguage": "en-ZA",
-                "isAccessibleForFree": true,
-                "offers": { "@type": "Offer", "price": "0", "priceCurrency": "ZAR" },
-                "featureList": [
-                    "Drag and drop invoice template designer with two saved layouts",
-                    "SARS tax-invoice fields and 15% VAT, inclusive or exclusive",
-                    "Customer book and invoice storage",
-                    "Payments, statuses and outstanding balances",
-                    "Print-perfect A4 PDF",
-                    "Data stored in your browser, exportable to JSON"
-                ],
-                "areaServed": { "@type": "Country", "name": "South Africa" },
-                "isPartOf": { "@id": "https://dandyapp.co.za/#website" },
-                "author": { "@type": "Person", "name": "Matthew McKenzie", "url": "https://www.matthewmckenzie.co.za" }
-            }
-        ]
+      "@type": "WebSite",
+      "@id": "https://www.dandyapp.co.za/#website",
+      "url": "https://www.dandyapp.co.za/",
+      "name": "DANDYAPP",
+      "description": "Free South African invoice app: design your template, keep customers, track payments and print SARS-compliant 15% VAT invoices. Private, in your browser.",
+      "inLanguage": "en-ZA",
+      "publisher": {
+        "@id": "https://www.dandyapp.co.za/#author"
+      }
+    },
+    {
+      "@type": "Person",
+      "@id": "https://www.dandyapp.co.za/#author",
+      "name": "Matthew McKenzie",
+      "url": "https://www.matthewmckenzie.co.za",
+      "sameAs": [
+        "https://github.com/SirMcKenzie",
+        "https://www.strkr.co.za"
+      ]
+    },
+    {
+      "@type": "WebApplication",
+      "@id": "https://www.dandyapp.co.za/#app",
+      "name": "DANDYAPP Invoice App",
+      "url": "https://www.dandyapp.co.za/",
+      "applicationCategory": "BusinessApplication",
+      "applicationSubCategory": "Invoicing",
+      "operatingSystem": "Any (web browser)",
+      "browserRequirements": "Requires JavaScript and a browser with IndexedDB.",
+      "description": "Free South African invoice app: design your template, keep customers, track payments and print SARS-compliant 15% VAT invoices. Private, in your browser.",
+      "image": "https://www.dandyapp.co.za/assets/og-image.jpg",
+      "inLanguage": "en-ZA",
+      "isAccessibleForFree": true,
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "ZAR"
+      },
+      "featureList": [
+        "SARS tax-invoice fields and 15% VAT, inclusive or exclusive",
+        "Drag-and-drop invoice template designer with two saved layouts",
+        "Customer book with CSV import",
+        "Payments, statuses and outstanding balances",
+        "A4 PDF output",
+        "Built-in fonts or your own font",
+        "Works offline; data stays in your browser"
+      ],
+      "screenshot": [
+        "https://www.dandyapp.co.za/assets/screenshots/dashboard.png",
+        "https://www.dandyapp.co.za/assets/screenshots/editor.png",
+        "https://www.dandyapp.co.za/assets/screenshots/designer.png"
+      ],
+      "areaServed": {
+        "@type": "Country",
+        "name": "South Africa"
+      },
+      "author": {
+        "@id": "https://www.dandyapp.co.za/#author"
+      },
+      "isPartOf": {
+        "@id": "https://www.dandyapp.co.za/#website"
+      }
+    },
+    {
+      "@type": "FAQPage",
+      "@id": "https://www.dandyapp.co.za/#faq",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Is DANDYAPP really free?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. There is no account, no sign-up, no ads and no limit on how many invoices you create."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is the invoice a valid SARS tax invoice?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "It includes the fields the VAT Act asks for and warns you while you type if something is missing, such as your VAT number, the invoice number, or the customer's address and VAT number above R5 000. You stay responsible for checking that every invoice is correct for your situation. This is not tax advice."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Where is my data stored?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "In your own browser, on your device. It is never uploaded, so nobody else has a copy. Clearing your site data or switching browser or device means starting empty, so download a backup regularly and restore it from Settings."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does it work offline and on my phone?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes to both. After your first visit it keeps working without a connection, it is laid out for phones, and you can install it to your home screen like an app."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I use my own logo and fonts?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Add your logo and banking details in Settings, then design the layout in Templates with 13 built-in fonts or a font file of your own."
+          }
+        }
+      ]
     }
+  ]
+}
     </script>
 </head>
 <body>
@@ -89,6 +196,7 @@
 
     <header class="site-header">
         <a href="#/" class="wordmark">DANDY<span>APP</span></a>
+        <span class="version" id="app-version" hidden></span>
         <nav class="pill-nav" aria-label="Primary">
             <a href="#/" data-nav="dashboard">Dashboard</a>
             <a href="#/invoices" data-nav="invoices">Invoices</a>
@@ -104,7 +212,35 @@
         </div>
     </header>
 
-    <main class="app" id="view" aria-live="polite"></main>
+    <p class="sr-only" id="route-announcer" role="status" aria-live="polite"></p>
+
+    <main class="app" id="view">
+        <noscript>
+            <div class="panel"><h1 style="font-size:1.5rem;margin-bottom:.5rem">DANDYAPP needs JavaScript</h1>
+            <p class="muted">DANDYAPP is an invoicing app that runs in your browser, so it needs JavaScript switched on. Nothing is sent to a server.</p></div>
+        </noscript>
+    </main>
+
+    <section class="about" id="about" aria-labelledby="about-h">
+        <h2 id="about-h">Free invoicing for South African businesses</h2>
+        <p class="about-lead">DANDYAPP is a free invoicing app built for South African businesses. Create SARS-compliant tax invoices with 15% VAT, design the layout yourself, keep a customer book and see who still owes you. It runs entirely in your browser: no account, no sign-up, and your data is never uploaded.</p>
+        <div class="feat-grid">
+            <div class="feat"><h3>SARS-ready tax invoices</h3><p>VAT added on top, already included, or none. It checks the details a valid tax invoice needs while you type.</p></div>
+            <div class="feat"><h3>Design your own template</h3><p>Drag and drop the layout, colours and fonts. Keep two layouts and switch any time; every invoice follows.</p></div>
+            <div class="feat"><h3>Customers and CSV import</h3><p>A customer book you can pick from or type over, plus a CSV import that tells you which columns it skips.</p></div>
+            <div class="feat"><h3>Payments and status</h3><p>Record part and full payments. See what is paid, part paid and overdue, and who owes you most.</p></div>
+            <div class="feat"><h3>A4 PDF in one click</h3><p>A print-perfect A4 layout. Long invoices continue on new pages with the table header repeated.</p></div>
+            <div class="feat"><h3>Private by design</h3><p>Everything stays in your browser. No account, no tracking, no third-party scripts.</p></div>
+        </div>
+        <h2 class="about-sub">Common questions</h2>
+        <div class="faq-list">
+            <details class="faq"><summary>Is DANDYAPP really free?</summary><p>Yes. There is no account, no sign-up, no ads and no limit on how many invoices you create.</p></details>
+            <details class="faq"><summary>Is the invoice a valid SARS tax invoice?</summary><p>It includes the fields the VAT Act asks for and warns you while you type if something is missing, such as your VAT number, the invoice number, or the customer's address and VAT number above R5 000. You stay responsible for checking that every invoice is correct for your situation. This is not tax advice.</p></details>
+            <details class="faq"><summary>Where is my data stored?</summary><p>In your own browser, on your device. It is never uploaded, so nobody else has a copy. Clearing your site data or switching browser or device means starting empty, so download a backup regularly and restore it from Settings.</p></details>
+            <details class="faq"><summary>Does it work offline and on my phone?</summary><p>Yes to both. After your first visit it keeps working without a connection, it is laid out for phones, and you can install it to your home screen like an app.</p></details>
+            <details class="faq"><summary>Can I use my own logo and fonts?</summary><p>Yes. Add your logo and banking details in Settings, then design the layout in Templates with 13 built-in fonts or a font file of your own.</p></details>
+        </div>
+    </section>
 
     <footer class="site-footer no-print">
         <div class="footer-top">
@@ -119,6 +255,9 @@
                 <a class="footer-credit" href="https://www.matthewmckenzie.co.za" target="_blank" rel="noopener">
                     Made by Matthew McKenzie <i data-icon="arrow-up-right"></i>
                 </a>
+                <a class="footer-credit" href="https://github.com/SirMcKenzie/dandyapp.co.za" target="_blank" rel="noopener">
+                    Source on GitHub <i data-icon="arrow-up-right"></i>
+                </a>
             </div>
         </div>
         <div class="footer-bottom">
@@ -131,21 +270,5 @@
 
 </div>
 
-<script src="/js/vendor/dexie.min.js"></script>
-<script src="/js/config.js"></script>
-<script src="/js/core.js"></script>
-<script src="/js/billing.js"></script>
-<script src="/js/fonts.js"></script>
-<script src="/js/components.js"></script>
-<script src="/js/layout.js"></script>
-<script src="/js/csv.js"></script>
-<script src="/js/db.js"></script>
-<script src="/js/app.js"></script>
-<script src="/js/views/dashboard.js"></script>
-<script src="/js/views/invoices.js"></script>
-<script src="/js/views/editor.js"></script>
-<script src="/js/views/customers.js"></script>
-<script src="/js/views/designer.js"></script>
-<script src="/js/views/settings.js"></script>
 </body>
 </html>

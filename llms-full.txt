@@ -1,0 +1,35 @@
+# DANDYAPP: full description
+
+> DANDYAPP is a free, private invoicing app for South African businesses, available at https://www.dandyapp.co.za/. It runs entirely in the web browser. There is no account, no sign-up and no server that stores user data.
+
+## What it does
+
+- **Tax invoices.** Creates invoices with VAT at 15% (added on top, already included, or none). Titles itself TAX INVOICE when VAT applies and INVOICE otherwise.
+- **SARS checks.** While you type, it lists what is missing for a valid tax invoice: the supplier's registered name, address and VAT number, a serial number, a description on every line and, for totals of R5 000 or more, the customer's name, address and VAT number.
+- **Template designer.** A drag-and-drop canvas on an A4 page. Components (logo, business details, invoice details, customer, line items, totals, banking details, notes, terms, free text, dividers) can be moved, resized, recoloured and given a body and heading typeface. Two layouts (A and B) can be stored; one is active. Changing the layout or switching templates restyles every invoice, old and new. Components cannot overlap or leave the printable area, and the required ones cannot be removed.
+- **Typefaces.** 13 built-in open-licence fonts, or an uploaded .woff2, .woff, .ttf or .otf file.
+- **Customers.** A customer book with name, phone, email, note, address and VAT number. Customers can be imported from a CSV file; the importer reads only the columns it understands and tells the user which columns it will leave out.
+- **Payments and status.** Part and full payments are recorded against invoices. Status (draft, sent, part paid, paid, overdue, void) is derived from the payments and the due date. The dashboard totals what was invoiced, received, outstanding and overdue, per currency.
+- **Invoice numbers.** The next number is one more than the highest in use. Deleting the newest invoice returns its number; deleting an earlier one leaves a gap; voiding an invoice retires its number permanently.
+- **PDF.** The invoice is laid out on A4 pages (long invoices continue on further pages with the table header repeated). "Download PDF" opens the browser's print dialog, where the user chooses "Save as PDF".
+- **Currencies.** ZAR, USD, EUR, GBP and AUD.
+
+## Safe with several tabs
+
+An invoice, a template slot, a customer or the Settings page can only be edited in one browser tab at a time (using the browser's Web Locks). A second tab shows a read-only copy that unlocks by itself when the first tab closes or moves on. New invoice numbers are assigned one tab at a time, so two tabs never end up with the same number. Restoring a backup is refused while another tab is mid-edit and reloads the other open tabs afterwards.
+
+## Privacy and storage
+
+All data (invoices, customers, payments, templates, settings and uploaded fonts) is stored in the browser's IndexedDB on the user's own device and is never uploaded. The site loads no analytics, advertising or third-party scripts, and no third-party fonts. Because storage is local, clearing site data, private browsing, or switching device or browser means starting empty. A JSON backup can be downloaded and restored from Settings. Permanent, synced storage is not built; a button on the dashboard lets users say they want it.
+
+## Limits
+
+- Single-user and single-device; no sync, no accounts, no emailing of invoices.
+- Not tax, legal or financial advice.
+- English interface.
+
+## Links
+
+- App: https://www.dandyapp.co.za/
+- Source: https://github.com/SirMcKenzie/dandyapp.co.za
+- Author: https://www.matthewmckenzie.co.za

@@ -1,5 +1,6 @@
+# DANDYAPP - the whole site is public and meant to be found.
 User-agent: *
 Allow: /
 
-# Nothing here is generated server-side, so there is nothing to keep crawlers out of.
-Sitemap: https://dandyapp.co.za/sitemap.xml
+# A plain-language summary for AI assistants and search tools: /llms.txt
+Sitemap: https://www.dandyapp.co.za/sitemap.xml

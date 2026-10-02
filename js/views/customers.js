@@ -120,19 +120,25 @@ var CustomersView = (function () {
             box.querySelector('#imp-go').addEventListener('click', function () {
                 var update = !!(box.querySelector('#imp-update') && box.querySelector('#imp-update').checked);
                 var toSave = fresh.map(function (c) { return Object.assign(Billing.blankCustomer(), c); });
-                var updated = 0;
-                if (update) {
-                    matches.forEach(function (c) {
-                        var have = Object.assign({}, existing[key(c.name)]);
-                        ['phone', 'email', 'note', 'address', 'vatNo'].forEach(function (f) { if (c[f]) have[f] = c[f]; });
-                        toSave.push(have);
-                        updated++;
-                    });
-                }
-                DB.saveCustomers(toSave).then(load).then(function () {
+                var updated = 0, busy = 0;
+                // A customer open in another tab would be overwritten by that tab's next save, so leave it alone.
+                Locks.heldNames().then(function (held) {
+                    if (update) {
+                        matches.forEach(function (c) {
+                            var have = Object.assign({}, existing[key(c.name)]);
+                            if (have.id !== selectedId && held.indexOf(Locks.names.customer(have.id)) !== -1) { busy++; return; }
+                            ['phone', 'email', 'note', 'address', 'vatNo'].forEach(function (f) { if (c[f]) have[f] = c[f]; });
+                            toSave.push(have);
+                            updated++;
+                        });
+                    }
+                    return DB.saveCustomers(toSave);
+                }).then(load).then(function () {
                     drawImport(null);
                     drawList();
-                    Dandy.toast('Imported ' + fresh.length + ' new' + (updated ? ', updated ' + updated : '') + (matches.length && !update ? ', skipped ' + matches.length + ' existing' : ''));
+                    Dandy.toast('Imported ' + fresh.length + ' new' + (updated ? ', updated ' + updated : '') +
+                        (busy ? ', skipped ' + busy + ' open in another tab' : '') +
+                        (matches.length && !update ? ', skipped ' + matches.length + ' existing' : ''));
                 }).catch(function (err) { Dandy.toast('Import failed: ' + err.message); });
             });
         }
@@ -229,10 +235,29 @@ var CustomersView = (function () {
             });
         }
 
-        return load().then(function () {
+        // Only an existing customer needs a lock; a new one is nobody else's yet.
+        var needsLock = !!selectedId && selectedId !== 'new';
+        var lockStep = needsLock ? Locks.acquire(Locks.names.customer(selectedId)) : Promise.resolve({ release: function () {} });
+
+        return Promise.all([load(), lockStep]).then(function (r) { return Locks.guard(r[1], function () {
+            var lock = r[1];
+            var cancelWait = null;
             shell(); drawList(); drawForm();
             Dandy.hydrateIcons(el);
-        });
+
+            if (needsLock && !lock) {
+                var form = el.querySelector('#form');
+                form.insertAdjacentHTML('afterbegin', Locks.bannerHtml('This customer'));
+                Dandy.hydrateIcons(form);
+                Locks.freeze(form, 'a');
+                cancelWait = Locks.whenFree(Locks.names.customer(selectedId), function () { App.reload(); });
+            }
+
+            return { destroy: function () {
+                if (cancelWait) cancelWait();
+                if (lock) lock.release();
+            } };
+        }); });
     }
 
     return { mount: mount };

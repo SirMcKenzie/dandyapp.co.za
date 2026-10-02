@@ -2,13 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <url>
-    <loc>https://dandyapp.co.za/</loc>
-    <lastmod>2026-09-30</lastmod>
+    <loc>https://www.dandyapp.co.za/</loc>
+    <lastmod>2026-10-01</lastmod>
     <changefreq>monthly</changefreq>
     <priority>1.0</priority>
     <image:image>
-      <image:loc>https://dandyapp.co.za/assets/og-image.png</image:loc>
-      <image:title>DANDYAPP - a private invoicing app for South African businesses</image:title>
+      <image:loc>https://www.dandyapp.co.za/assets/og-image.jpg</image:loc>
+      <image:title>DANDYAPP - free invoicing for South African businesses</image:title>
     </image:image>
   </url>
 </urlset>

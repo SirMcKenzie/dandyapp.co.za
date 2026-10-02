@@ -53,6 +53,25 @@ var InvoicesView = (function () {
             bind('#f-to', 'to', 'change');
         }
 
+        /* An invoice open in another tab is being edited there; changing it here would be
+           overwritten (or would overwrite). Refuse politely instead. */
+        function ifFree(inv, fn) {
+            return Locks.tryRun(Locks.names.invoice(inv.id), fn).then(function (r) {
+                if (!r.ok) Dandy.toast(inv.number + ' is open in another tab. Close it there first.');
+                return r;
+            });
+        }
+
+        /* The list is only as fresh as the last load, so every action re-reads the invoice first.
+           If another tab deleted it, or changed it so the action no longer makes sense, say so
+           instead of acting on the stale row. */
+        var GONE = 'gone', CHANGED = 'changed';
+        function report(inv, outcome) {
+            if (outcome === GONE) Dandy.toast(inv.number + ' no longer exists.');
+            else if (outcome === CHANGED) Dandy.toast(inv.number + ' was changed in another tab. The list has been refreshed.');
+        }
+        function failed(err) { Dandy.toast('Something went wrong: ' + (err && err.message)); }
+
         function drawList() {
             var list = el.querySelector('#list');
             var shown = visible();
@@ -98,20 +117,35 @@ var InvoicesView = (function () {
                 });
 
                 tr.querySelector('[data-act="void"]').addEventListener('click', function () {
-                    inv.status = inv.status === 'void' ? (row.pays.length ? 'sent' : 'draft') : 'void';
-                    DB.saveInvoice(inv).then(load).then(drawList);
+                    ifFree(inv, function () {
+                        return Promise.all([DB.getInvoice(inv.id), DB.paymentsFor(inv.id)]).then(function (d) {
+                            var fresh = d[0];
+                            if (!fresh) return GONE;
+                            fresh.status = fresh.status === 'void' ? (d[1].length ? 'sent' : 'draft') : 'void';
+                            return DB.saveInvoice(fresh);
+                        });
+                    }).then(function (r) { if (r.ok) report(inv, r.value); }).catch(failed).then(load).then(drawList);
                 });
                 var send = tr.querySelector('[data-act="send"]');
                 if (send) send.addEventListener('click', function () {
-                    inv.status = 'sent';
-                    DB.saveInvoice(inv).then(load).then(drawList);
-                    Dandy.toast(inv.number + ' marked as sent');
+                    ifFree(inv, function () {
+                        return DB.getInvoice(inv.id).then(function (fresh) {
+                            if (!fresh) return GONE;
+                            if (fresh.status !== 'draft') return CHANGED;      // e.g. voided elsewhere: do not undo that
+                            fresh.status = 'sent';
+                            return DB.saveInvoice(fresh);
+                        });
+                    }).then(function (r) {
+                        if (!r.ok) return;
+                        if (r.value === GONE || r.value === CHANGED) report(inv, r.value);
+                        else Dandy.toast(inv.number + ' marked as sent');
+                    }).catch(failed).then(load).then(drawList);
                 });
                 tr.querySelector('[data-act="dup"]').addEventListener('click', function () {
-                    DB.duplicateInvoice(inv).then(function (copy) {
-                        Dandy.toast('Duplicated as ' + copy.number);
-                        return load();
-                    }).then(drawList);
+                    DB.getInvoice(inv.id).then(function (fresh) {
+                        if (!fresh) { report(inv, GONE); return; }
+                        return DB.duplicateInvoice(fresh).then(function (copy) { Dandy.toast('Duplicated as ' + copy.number); });
+                    }).catch(failed).then(load).then(drawList);
                 });
                 tr.querySelector('[data-act="del"]').addEventListener('click', function () {
                     DB.numberFate(inv).then(function (fate) {
@@ -121,7 +155,9 @@ var InvoicesView = (function () {
                             burned: 'It has been voided, so ' + inv.number + ' stays used for good and will not be given to another invoice.'
                         }[fate];
                         if (!window.confirm('Delete ' + inv.number + ' and its payments permanently?\n\n' + what)) return;
-                        return DB.removeInvoice(id).then(load).then(function () { drawList(); Dandy.toast('Deleted'); });
+                        return ifFree(inv, function () { return DB.removeInvoice(id); }).then(function (r) {
+                            return load().then(function () { drawList(); if (r.ok) Dandy.toast('Deleted'); });
+                        });
                     });
                 });
             });

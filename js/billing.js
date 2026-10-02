@@ -170,8 +170,9 @@ var Billing = (function () {
         var issues = [];
         if (inv.vatMode === 'none') return issues;
 
-        var full = calcTotals(inv).total >= FULL_INVOICE_THRESHOLD;
-        var over = money(FULL_INVOICE_THRESHOLD, inv.currency);
+        // The R5 000 limit is in rand, so it only applies to invoices issued in rand.
+        var full = (inv.currency || 'ZAR') === 'ZAR' && calcTotals(inv).total >= FULL_INVOICE_THRESHOLD;
+        var over = money(FULL_INVOICE_THRESHOLD, 'ZAR');
 
         if (!profile.vatNo) issues.push('Your VAT registration number is missing - a tax invoice must show it.');
         if (!profile.name) issues.push('Your registered business name is missing.');

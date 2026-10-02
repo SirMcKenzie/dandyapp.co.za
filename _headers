@@ -1,0 +1,28 @@
+# Cloudflare Pages response headers. Test locally by serving the folder with these applied.
+
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()
+  Cross-Origin-Opener-Policy: same-origin
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  # Scripts may only come from this site. Styles need 'unsafe-inline' because the designer
+  # positions boxes with inline style attributes. Data URLs are for a logo and uploaded fonts.
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+
+# Fonts never change under the same name, so let browsers keep them for a month.
+/fonts/*
+  Cache-Control: public, max-age=2592000
+
+# The service worker must always be re-checked so an update is picked up straight away.
+/sw.js
+  Cache-Control: no-cache
+
+# Machine-readable files: say what they are.
+/llms.txt
+  Content-Type: text/plain; charset=utf-8
+/llms-full.txt
+  Content-Type: text/plain; charset=utf-8
+/.well-known/security.txt
+  Content-Type: text/plain; charset=utf-8

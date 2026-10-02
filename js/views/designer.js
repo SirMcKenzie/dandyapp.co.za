@@ -20,12 +20,15 @@ var DesignerView = (function () {
 
     function mount(el, params) {
         var slot = params[0];
-        return Promise.all([DB.getTemplate(slot), DB.getProfile(), DB.getActiveSlot()]).then(function (d) {
-            return run(el, slot, d[0], d[1], d[2]);
+        return Promise.all([DB.getTemplate(slot), DB.getProfile(), DB.getActiveSlot(), Locks.acquire(Locks.names.template(slot))]).then(function (d) {
+            return Locks.guard(d[3], function () { return run(el, slot, d[0], d[1], d[2], d[3]); });
         });
     }
 
-    function run(el, slot, saved, profile, activeSlot) {
+    /* `lock` is null when another tab has this template open: it is then shown read-only. */
+    function run(el, slot, saved, profile, activeSlot, lock) {
+        var locked = !lock;
+        var cancelWait = null;
         var tpl = clone(saved);
         var savedJson = JSON.stringify(saved);
         var ctx = Components.sampleContext(profile);
@@ -391,6 +394,7 @@ var DesignerView = (function () {
         /* --- Pointer: moving and resizing boxes ----------------------------------------------- */
 
         function onCanvasDown(e) {
+            if (locked) return;
             if (e.button !== undefined && e.button !== 0) return;
             var box = e.target.closest('.d-box');
             if (!box) { select(null); return; }
@@ -455,6 +459,7 @@ var DesignerView = (function () {
         /* --- Pointer: dragging a component in from the palette -------------------------------- */
 
         function onPaletteDown(e) {
+            if (locked) return;
             var chip = e.target.closest('.chip');
             if (!chip || chip.getAttribute('aria-disabled') === 'true') return;
             e.preventDefault();
@@ -490,6 +495,7 @@ var DesignerView = (function () {
         /* --- Keyboard ------------------------------------------------------------------------------ */
 
         function onKey(e) {
+            if (locked) return;
             var tag = (e.target.tagName || '').toLowerCase();
             if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
 
@@ -549,11 +555,22 @@ var DesignerView = (function () {
 
         redraw();
 
+        if (locked) {
+            el.insertAdjacentHTML('afterbegin', Locks.bannerHtml('Template ' + slot));
+            Dandy.hydrateIcons(el);
+            Locks.freeze(el.querySelector('.designer'));
+            Locks.freeze(el.querySelector('.toolbar'));
+            Dandy.els('[data-slot]', el).forEach(function (b) { b.disabled = false; });   // switching to the other slot is fine
+            cancelWait = Locks.whenFree(Locks.names.template(slot), function () { if (alive) App.reload(); });
+        }
+
         return {
             isDirty: isDirty,
             refresh: fit,
             destroy: function () {
                 alive = false;
+                if (cancelWait) cancelWait();
+                if (lock) lock.release();
                 document.removeEventListener('keydown', onKey);
                 window.removeEventListener('pointermove', onMove);
                 window.removeEventListener('pointerup', onUp);

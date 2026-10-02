@@ -26,9 +26,9 @@ var Fonts = (function () {
         { id: 'mono',  label: 'Monospace',  fallback: 'monospace' }
     ];
 
-    /* Poppins ships four weights because the invoice already uses them; the rest ship regular and bold. */
+    /* Poppins ships every weight because it is also the site's own UI font; the rest ship regular and bold. */
     var BUILTIN = [
-        { id: 'poppins',          label: 'Poppins',          group: 'sans',  weights: [400, 600, 700, 900] },
+        { id: 'poppins',          label: 'Poppins',          group: 'sans',  weights: [300, 400, 500, 600, 700, 800, 900] },
         { id: 'inter',            label: 'Inter',            group: 'sans',  weights: [400, 700] },
         { id: 'dm-sans',          label: 'DM Sans',          group: 'sans',  weights: [400, 700] },
         { id: 'montserrat',       label: 'Montserrat',       group: 'sans',  weights: [400, 700] },
@@ -85,6 +85,8 @@ var Fonts = (function () {
 
     function registerCustom(rows) {
         rows.forEach(function (row) {
+            // Only our own id format and an embedded font are ever registered; never a URL.
+            if (!row || !/^u_[a-z0-9]{1,30}$/.test(row.id) || typeof row.dataUrl !== 'string' || row.dataUrl.indexOf('data:font/') !== 0) return;
             if (custom[row.id]) return;
             custom[row.id] = { id: row.id, name: row.name };
             try {

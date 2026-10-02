@@ -3,9 +3,11 @@
 
    A view is an object with mount(container, params, query). mount() may
    return a promise, and resolves to either a cleanup function or an object:
-     { destroy(), refresh(), isDirty() }
+     { destroy(), refresh(), isDirty(), pendingSave() }
    refresh() is called when fonts finish loading or the window is resized,
    because the layout engine measures real text.
+   pendingSave() starts saving anything unsaved and returns true if there was something to save,
+   so closing the tab can be held up until the write lands.
    ========================================================================== */
 
 var App = (function () {
@@ -16,14 +18,15 @@ var App = (function () {
     var currentHash = '';
     var token = 0;               // guards against a slow mount finishing after a newer navigation
     var suppress = false;
+    var HOME_TITLE = document.title;     // the long, descriptive title belongs to the home page only
 
     var ROUTES = [
-        { re: /^\/?$/,                     nav: 'dashboard', view: function () { return DashboardView; } },
-        { re: /^\/invoices$/,              nav: 'invoices',  view: function () { return InvoicesView; } },
-        { re: /^\/invoice\/([^/]+)$/,      nav: 'invoices',  view: function () { return EditorView; } },
-        { re: /^\/customers(?:\/([^/]+))?$/, nav: 'customers', view: function () { return CustomersView; } },
-        { re: /^\/templates\/([AB])$/,     nav: 'templates', view: function () { return DesignerView; } },
-        { re: /^\/settings$/,              nav: 'settings',  view: function () { return SettingsView; } }
+        { re: /^\/?$/,                     nav: 'dashboard', title: '',          view: function () { return DashboardView; } },
+        { re: /^\/invoices$/,              nav: 'invoices',  title: 'Invoices',  view: function () { return InvoicesView; } },
+        { re: /^\/invoice\/([^/]+)$/,      nav: 'invoices',  title: 'Invoice',   view: function () { return EditorView; } },
+        { re: /^\/customers(?:\/([^/]+))?$/, nav: 'customers', title: 'Customers', view: function () { return CustomersView; } },
+        { re: /^\/templates\/([AB])$/,     nav: 'templates', title: 'Templates', view: function () { return DesignerView; } },
+        { re: /^\/settings$/,              nav: 'settings',  title: 'Settings',  view: function () { return SettingsView; } }
     ];
 
     function esc(s) { return Dandy.escapeHtml(s == null ? '' : s); }
@@ -50,6 +53,11 @@ var App = (function () {
         return '<span class="st st-' + status + '">' + esc(Billing.STATUS_LABEL[status]) + '</span>';
     }
 
+    /* A hand-typed or truncated link can hold a bad escape such as "%"; keep the raw text then. */
+    function safeDecode(s) {
+        try { return decodeURIComponent(s); } catch (e) { return s; }
+    }
+
     function parseHash() {
         var raw = location.hash.replace(/^#/, '') || '/';
         var q = raw.indexOf('?');
@@ -58,7 +66,7 @@ var App = (function () {
         if (q !== -1) {
             raw.slice(q + 1).split('&').forEach(function (kv) {
                 var i = kv.indexOf('=');
-                if (i > 0) query[decodeURIComponent(kv.slice(0, i))] = decodeURIComponent(kv.slice(i + 1));
+                if (i > 0) query[safeDecode(kv.slice(0, i))] = safeDecode(kv.slice(i + 1));
             });
         }
         return { path: path, query: query };
@@ -82,6 +90,16 @@ var App = (function () {
         });
         var drawer = document.getElementById('nav-drawer');
         if (drawer && drawer.classList.contains('open')) document.getElementById('burger').click();
+    }
+
+    /* Each view gets its own tab title, a screen-reader announcement, and the
+       "about" text (which exists for people and crawlers arriving at the home page) only on home. */
+    function setPage(match) {
+        document.title = match.title ? match.title + ' | DANDYAPP' : HOME_TITLE;
+        var announcer = document.getElementById('route-announcer');
+        if (announcer) announcer.textContent = match.title || 'Dashboard';
+        var about = document.getElementById('about');
+        if (about) about.hidden = match.nav !== 'dashboard';
     }
 
     /* --- Router -------------------------------------------------------------------- */
@@ -110,6 +128,7 @@ var App = (function () {
             if (mine !== token) return;
             viewEl.innerHTML = '';
             setNav(match.nav);
+            setPage(match);
             window.scrollTo(0, 0);
             return Promise.resolve(match.view().mount(viewEl, params, where.query)).then(function (v) {
                 if (mine !== token) { if (v) normalise(v).destroy && normalise(v).destroy(); return; }
@@ -138,8 +157,21 @@ var App = (function () {
 
     function refresh() { if (current && current.refresh) current.refresh(); }
 
+    /* Draw the current page again (used when a tab that was locked out becomes free). */
+    function reload() { route(); }
+
+    /* Makes the app installable and usable offline. Network first, so it never serves stale files while online. */
+    function registerServiceWorker() {
+        if (!('serviceWorker' in navigator)) return;
+        var register = function () { navigator.serviceWorker.register('/sw.js').catch(function () { /* optional enhancement */ }); };
+        if (document.readyState === 'complete') register(); else window.addEventListener('load', register);
+    }
+
     function start() {
         viewEl = document.getElementById('view');
+
+        var ver = document.getElementById('app-version');
+        if (ver && Config.version) { ver.textContent = Config.version; ver.hidden = false; }
 
         DB.init().then(function () {
             return DB.listFonts().then(Fonts.registerCustom);
@@ -147,10 +179,15 @@ var App = (function () {
             window.addEventListener('hashchange', onHashChange);
             window.addEventListener('resize', Dandy.debounce(refresh, 120));
             window.addEventListener('beforeunload', function (e) {
-                if (current && current.isDirty && current.isDirty()) { e.preventDefault(); e.returnValue = ''; }
+                var unsaved = current && current.isDirty && current.isDirty();
+                var saving = current && current.pendingSave && current.pendingSave();
+                if (unsaved || saving) { e.preventDefault(); e.returnValue = ''; }
             });
             if (document.fonts && document.fonts.ready) document.fonts.ready.then(refresh);
             route();
+            registerServiceWorker();
+            // A backup restored in another tab replaced the data this tab is showing.
+            Locks.onReload(function () { location.reload(); });
         }).catch(function (err) {
             console.error(err);
             viewEl.innerHTML = '<div class="panel"><p class="note note-bad">' + Dandy.icon('alert') +
@@ -163,5 +200,5 @@ var App = (function () {
 
     document.addEventListener('DOMContentLoaded', start);
 
-    return { summarise: summarise, statusPill: statusPill, go: go, esc: esc, refresh: refresh };
+    return { summarise: summarise, statusPill: statusPill, go: go, esc: esc, refresh: refresh, reload: reload };
 })();

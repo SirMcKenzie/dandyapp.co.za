@@ -11,8 +11,8 @@
     --slab:       #f8fafc;   /* the floating panel */
     --white:      #ffffff;
     --ink:        #111827;
-    --muted:      #6b7280;
-    --faint:      #9ca3af;
+    --muted:      #5b6472;
+    --faint:      #6b7280;
     --hairline:   #f3f4f6;
     --border:     #e5e7eb;
     --footer:     #09090b;
@@ -135,6 +135,13 @@ h1, h2, h3, h4 { font-weight: 900; letter-spacing: -.05em; line-height: 1.05; }
 }
 @media (min-width: 768px) { .wordmark { font-size: 1.5rem; } }
 .wordmark span { color: var(--faint); }
+
+.version {
+    font-size: .6875rem; font-weight: 500; color: var(--faint);
+    letter-spacing: .02em; white-space: nowrap; z-index: 50;
+    margin-left: -.5rem;
+}
+@media (min-width: 768px) { .version { margin-left: -1.25rem; } }
 
 .pill-nav {
     display: none; align-items: center; gap: .25rem;
@@ -418,7 +425,7 @@ textarea { resize: vertical; min-height: 6rem; line-height: 1.6; }
     border-top: 1px solid var(--footer-2); padding-top: 2rem;
     max-width: 56rem; margin: 0 auto; text-align: center;
 }
-.footer-bottom p { font-size: .6875rem; color: #52525b; line-height: 1.7; }
+.footer-bottom p { font-size: .6875rem; color: #a1a1aa; line-height: 1.7; }
 .footer-bottom p + p { margin-top: .75rem; }
 
 /* --- Utilities (a deliberately tiny set) ---------------------------------- */
