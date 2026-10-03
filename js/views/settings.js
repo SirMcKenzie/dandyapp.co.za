@@ -7,13 +7,13 @@ var SettingsView = (function () {
     var MAX_LOGO = 200 * 1024;   // a larger logo slows printing and bloats backups
 
     function thumb(tpl) {
-        return '<div class="thumb">' + tpl.components.map(function (c) {
+        return '<div class="thumb" style="background:' + esc(tpl.background.color) + '">' + tpl.components.map(function (c) {
             return '<i class="' + c.type + '" style="left:' + (c.x + 15) + 'mm;top:' + (c.y + 15) + 'mm;width:' + c.w + 'mm;height:' + c.h + 'mm"></i>';
         }).join('') + '</div>';
     }
 
     function mount(el) {
-        return Promise.all([DB.getProfile(), DB.getActiveSlot(), DB.getTemplate('A'), DB.getTemplate('B'),
+        return Promise.all([DB.getProfile(), DB.getActiveSlot(), DB.getTemplate('A', { bare: true }), DB.getTemplate('B', { bare: true }),
                             DB.getSetting('dueDays', Billing.DEFAULT_DUE_DAYS), DB.getSetting('terms', Billing.DEFAULT_TERMS),
                             Locks.acquire(Locks.names.settings)]).then(function (d) { return Locks.guard(d[6], function () {
             var lock = d[6];
@@ -160,7 +160,7 @@ var SettingsView = (function () {
                 });
                 Dandy.els('[data-act="reset"]', el).forEach(function (b) {
                     b.addEventListener('click', function () {
-                        if (!window.confirm('Reset template ' + b.dataset.slot + ' to its original layout? Your changes to it will be lost.')) return;
+                        if (!window.confirm('Reset template ' + b.dataset.slot + ' to its original layout? Your changes to the layout will be lost. Its background colour and images are kept.')) return;
                         var slot = b.dataset.slot;
                         Locks.tryRun(Locks.names.template(slot), function () { return DB.resetTemplate(slot); }).then(function (r) {
                             if (!r.ok) { Dandy.toast('Template ' + slot + ' is open in another tab. Close it there first.'); return; }

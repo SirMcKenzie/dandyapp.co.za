@@ -30,8 +30,11 @@ var DB = (function () {
     // Added later: uploaded typefaces, kept as data URLs so they survive JSON backups.
     db.version(2).stores({ fonts: 'id' });
 
+    // Template background pictures, also data URLs so they travel in backups.
+    db.version(3).stores({ images: 'id' });
+
     var BACKUP_FORMAT = 'dandyapp-backup-v2';
-    var TABLES = ['invoices', 'customers', 'payments', 'templates', 'settings', 'presets', 'fonts'];
+    var TABLES = ['invoices', 'customers', 'payments', 'templates', 'settings', 'presets', 'fonts', 'images'];
 
     /* --- Settings ------------------------------------------------------------ */
 
@@ -212,20 +215,78 @@ var DB = (function () {
 
     /* --- Templates ------------------------------------------------------------------ */
 
-    /* Always returns a template that has passed Components.validate(). */
-    function getTemplate(slot) {
+    /* The renderer is synchronous, so a template's pictures are read into Images' memory
+       before the template is handed out. */
+    function loadImages(ids) {
+        var need = ids.filter(function (id) { return !Images.get(id); });
+        if (!need.length) return Promise.resolve();
+        return db.images.bulkGet(need).then(function (rows) { rows.forEach(Images.remember); });
+    }
+
+    /* Always returns a template that has passed Components.validate(), with its pictures ready. */
+    function getTemplate(slot, opts) {
         return db.templates.get(slot).then(function (row) {
-            return Components.validate(row, slot);
+            var tpl = Components.validate(row, slot);
+            // Callers that only need the layout (thumbnails, font checks) skip reading the pictures.
+            if (opts && opts.bare) return tpl;
+            return loadImages(Components.imageIds(tpl.background)).then(function () {
+                // A layer whose picture is gone would only be a ghost in the designer.
+                tpl.background.layers = tpl.background.layers.filter(function (l) { return Images.get(l.imageId); });
+                return tpl;
+            });
         });
     }
 
-    function saveTemplate(tpl) {
+    /* `imageRows` are pictures added in the designer but not stored yet. They are written together
+       with the template, and any picture no template uses any more is removed in the same step. */
+    function saveTemplate(tpl, imageRows) {
         var clean = Components.validate(tpl, tpl.slot);
-        return db.templates.put(clean).then(function () { return clean; });
+        var fresh = (imageRows || []).map(cleanImageRow).filter(Boolean);
+
+        return db.transaction('rw', db.templates, db.images, function () {
+            return db.images.toCollection().primaryKeys().then(function (keys) {
+                var have = {};
+                keys.forEach(function (k) { have[k] = true; });
+                fresh.forEach(function (r) { have[r.id] = true; });
+                var before = clean.background.layers.length;
+                clean.background.layers = clean.background.layers.filter(function (l) { return have[l.imageId]; });
+                if (clean.background.layers.length !== before) throw new Error('A background image could not be stored. Add it again.');
+                var ids = Components.imageIds(clean.background);
+                var stored = ids.filter(function (id) { return !fresh.some(function (r) { return r.id === id; }); });
+                return db.images.bulkGet(stored).then(function (rows) {
+                    var bytes = fresh.concat(rows.filter(Boolean)).filter(function (r) { return ids.indexOf(r.id) !== -1; })
+                        .reduce(function (sum, r) { return sum + r.bytes; }, 0);
+                    if (bytes > Images.HARD) throw new Error('The images in this template are over the ' + Images.formatBytes(Images.HARD) + ' limit.');
+                    return db.images.bulkPut(fresh);
+                });
+            }).then(function () {
+                return db.templates.put(clean);
+            }).then(function () {
+                return db.templates.toArray();
+            }).then(function (rows) {
+                var used = {};
+                rows.forEach(function (r) {
+                    Components.imageIds(Components.cleanBackground(r.background)).forEach(function (id) { used[id] = true; });
+                });
+                return db.images.toCollection().primaryKeys().then(function (keys) {
+                    var unused = keys.filter(function (k) { return !used[k]; });
+                    unused.forEach(Images.forget);
+                    return db.images.bulkDelete(unused);
+                });
+            });
+        }).then(function () {
+            fresh.forEach(Images.remember);
+            return clean;
+        });
     }
 
+    /* Back to the original layout. The background (colour and pictures) is the user's own work, so it stays. */
     function resetTemplate(slot) {
-        return saveTemplate(Components.defaultTemplate(slot));
+        return getTemplate(slot, { bare: true }).then(function (current) {
+            var fresh = Components.defaultTemplate(slot);
+            fresh.background = current.background;
+            return saveTemplate(fresh);
+        });
     }
 
     function getActiveSlot() {
@@ -330,6 +391,13 @@ var DB = (function () {
         return Components.validate(r, r.slot);
     }
 
+    function cleanImageRow(r) {
+        if (!r || typeof r !== 'object' || !SAFE_ID.test(r.id) || typeof r.dataUrl !== 'string' ||
+            r.dataUrl.length > 4400000 || !IMAGE_URL.test(r.dataUrl)) return null;
+        var dim = function (v) { return Math.min(10000, Math.max(1, Math.round(num(v, 100)))); };
+        return { id: r.id, dataUrl: r.dataUrl, bytes: Math.round(Images.bytesOf(r.dataUrl)), w: dim(r.w), h: dim(r.h), name: str(r.name, 60) || 'Image' };
+    }
+
     function cleanPreset(r) {
         if (!r || typeof r !== 'object' || !str(r.desc, 300).trim()) return null;
         return { desc: str(r.desc, 300), unit: str(r.unit, 20) || 'each', rate: typeof r.rate === 'number' ? r.rate : str(String(r.rate == null ? '' : r.rate), 20) };
@@ -369,7 +437,7 @@ var DB = (function () {
 
     var CLEANERS = {
         invoices: cleanInvoice, customers: cleanCustomer, payments: cleanPayment, templates: cleanTemplateRow,
-        settings: cleanSetting, presets: cleanPreset, fonts: cleanFontRow
+        settings: cleanSetting, presets: cleanPreset, fonts: cleanFontRow, images: cleanImageRow
     };
 
     /* Turn a first-version backup into the current shape. Its rows still go through the cleaners below. */
@@ -404,6 +472,16 @@ var DB = (function () {
             count += clean[t].length;
             skipped += raw.length - clean[t].length;
         });
+        // A background layer needs its picture in the file, and a picture nobody uses is not kept.
+        var present = {}, used = {};
+        clean.images.forEach(function (i) { present[i.id] = true; });
+        clean.templates.forEach(function (t) {
+            var before = t.background.layers.length;
+            t.background.layers = t.background.layers.filter(function (l) { return present[l.imageId]; });
+            skipped += before - t.background.layers.length;
+            Components.imageIds(t.background).forEach(function (id) { used[id] = true; });
+        });
+        clean.images = clean.images.filter(function (i) { return used[i.id]; });
         // A logo of a type we cannot keep is dropped from the business profile; say so.
         (parsed.data.settings || []).forEach(function (r) {
             var logo = r && r.key === 'profile' && r.value && r.value.logo;
@@ -422,7 +500,10 @@ var DB = (function () {
         var tables = TABLES.map(function (t) { return db[t]; });
         return db.transaction('rw', tables, function () {
             TABLES.forEach(function (t) { db[t].clear(); db[t].bulkPut(clean[t]); });
-        }).then(function () { return { count: count, skipped: skipped }; });
+        }).then(function () {
+            Images.clear();
+            return { count: count, skipped: skipped };
+        });
     }
 
     /* --- The pre-Dexie (localStorage) data ------------------------------------------------

@@ -106,6 +106,8 @@ var Layout = (function () {
         root.className = 'pages';
         Fonts.apply(root, template.font);
 
+        var background = Components.backgroundHtml(template.background);
+
         root.innerHTML = plan.pages.map(function (pg, i) {
             var table = '';
             if (pg.table) {
@@ -113,6 +115,7 @@ var Layout = (function () {
                     Components.itemsTable(pg.table.rows) + '</div>';
             }
             return '<section class="page" aria-label="Page ' + (i + 1) + ' of ' + count + '">' +
+                background +
                 '<div class="safe">' + pageHtml(pg, ctx, i, count) + table + '</div>' +
                 (count > 1
                     ? '<div class="page-foot"><span>' + esc(inv.number) + '</span><span>Page ' + (i + 1) + ' of ' + count + '</span></div>'

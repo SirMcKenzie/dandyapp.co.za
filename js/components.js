@@ -96,7 +96,61 @@ var Components = (function () {
     };
 
     function defaultTemplate(slot) {
-        return (PRESETS[slot] || PRESETS.A)();
+        var t = (PRESETS[slot] || PRESETS.A)();
+        t.background = cleanBackground();
+        return t;
+    }
+
+    /* --- Page background -------------------------------------------------------
+       A colour, plus up to LAYER_MAX pictures drawn over it and under all text.
+       Layers are positioned in millimetres on the whole page (not the safe area),
+       because a background is allowed to run to the paper edge. The pictures
+       themselves live in the images table; a layer only names one.
+       ---------------------------------------------------------------------- */
+
+    var LAYER_MAX = 6;
+    var LAYER_MIN = 10;
+    var BG_SWATCHES = ['#ffffff', '#f8fafc', '#f3f4f6', '#fef9c3', '#dbeafe', '#dcfce7', '#fce7f3', '#111827'];
+    var ID_RE = /^[A-Za-z0-9_-]{1,64}$/;
+
+    function cleanBackground(b) {
+        b = b && typeof b === 'object' ? b : {};
+        var color = typeof b.color === 'string' && /^#[0-9a-f]{6}$/i.test(b.color) ? b.color.toLowerCase() : '#ffffff';
+        var seen = {}, layers = [];
+
+        (Array.isArray(b.layers) ? b.layers : []).forEach(function (l) {
+            if (layers.length >= LAYER_MAX || !l || typeof l !== 'object' || typeof l.imageId !== 'string' || !ID_RE.test(l.imageId)) return;
+            // Round the size first: the position is then limited by a whole half-millimetre, so x + w never passes the edge.
+            var w = half(clamp(num(l.w, PAGE.w), LAYER_MIN, PAGE.w));
+            var h = half(clamp(num(l.h, PAGE.h), LAYER_MIN, PAGE.h));
+            var id = typeof l.id === 'string' && ID_RE.test(l.id) && !seen[l.id] ? l.id : newId('layer');
+            seen[id] = true;
+            layers.push({
+                id: id, imageId: l.imageId,
+                x: half(clamp(num(l.x, 0), 0, PAGE.w - w)), y: half(clamp(num(l.y, 0), 0, PAGE.h - h)),
+                w: w, h: h,
+                opacity: Math.round(clamp(num(l.opacity, 1), 0, 1) * 20) / 20,
+                fit: l.fit === 'contain' ? 'contain' : 'cover'
+            });
+        });
+        return { color: color, layers: layers };
+    }
+
+    /* The page background as HTML: shared by the invoice pages and the designer canvas. */
+    function backgroundHtml(bg) {
+        bg = bg || cleanBackground();
+        return '<div class="bg" style="background:' + bg.color + '">' + bg.layers.map(function (l) {
+            var src = Images.url(l.imageId);
+            if (!src) return '';
+            return '<div class="bg-l" style="left:' + l.x + 'mm;top:' + l.y + 'mm;width:' + l.w + 'mm;height:' + l.h + 'mm;opacity:' + l.opacity + '">' +
+                '<img src="' + esc(src) + '" alt="" style="object-fit:' + l.fit + '"></div>';
+        }).join('') + '</div>';
+    }
+
+    function imageIds(bg) {
+        var ids = [];
+        ((bg && bg.layers) || []).forEach(function (l) { if (ids.indexOf(l.imageId) === -1) ids.push(l.imageId); });
+        return ids;
     }
 
     /* --- Geometry rules ------------------------------------------------------ */
@@ -223,6 +277,7 @@ var Components = (function () {
             name: String(raw.name || fallback.name).slice(0, 40),
             version: VERSION,
             font: cleanFont(raw.font),
+            background: cleanBackground(raw.background),
             components: placed
         };
     }
@@ -391,6 +446,10 @@ var Components = (function () {
         findFree: findFree,
         cleanProps: cleanProps,
         cleanFont: cleanFont,
+        cleanBackground: cleanBackground,
+        backgroundHtml: backgroundHtml,
+        imageIds: imageIds,
+        BG_SWATCHES: BG_SWATCHES, LAYER_MAX: LAYER_MAX, LAYER_MIN: LAYER_MIN,
         newId: newId,
 
         renderBody: renderBody,

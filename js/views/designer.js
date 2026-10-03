@@ -37,6 +37,11 @@ var DesignerView = (function () {
         var drag = null;
         var propUndoPending = false;
         var alive = true;
+        var bgMode = false;              // working on the page background; the layout steps back
+        var selectedLayer = null;
+        var pending = {};                // pictures added here but not stored until the template is saved
+        var contrastRows = [];
+        var contrastToken = 0, contrastTimer = null;
 
         function $(id) { return el.querySelector('#' + id); }
         function find(id) { return tpl.components.filter(function (c) { return c.id === id; })[0] || null; }
@@ -55,11 +60,13 @@ var DesignerView = (function () {
                     '<input type="text" id="t-name" maxlength="40" style="width:12rem;padding:.375rem .75rem"></label>' +
                 '<span id="active-tag"></span>' +
                 '<span class="spacer"></span><span class="saved-state" id="state"></span>' +
+                '<button class="btn btn-sm" id="b-bg" aria-pressed="false" title="Work on the page colour and background images">' + Dandy.icon('image') + 'Background</button>' +
                 '<button class="btn btn-sm" id="b-undo">' + Dandy.icon('undo') + 'Undo</button>' +
                 '<button class="btn btn-sm" id="b-reset">Reset layout</button>' +
                 '<a class="btn btn-sm" href="#/settings">Close</a>' +
                 '<button class="btn btn-dark btn-sm" id="b-save">' + Dandy.icon('save') + 'Save template</button>' +
             '</div>' +
+            '<input type="file" id="bg-file" accept="' + Images.ACCEPT.map(function (t) { return 'image/' + t; }).join(',') + '" hidden>' +
             '<p class="note note-info narrow-note">' + Dandy.icon('info') + '<span>Designing is easiest on a larger screen.</span></p>' +
             '<div class="designer">' +
                 '<aside><div class="panel"><h2>Components</h2><div class="palette" id="palette"></div></div>' +
@@ -82,6 +89,7 @@ var DesignerView = (function () {
             if (!undoStack.length) return;
             tpl = JSON.parse(undoStack.pop());
             if (selectedId && !find(selectedId)) selectedId = null;
+            if (selectedLayer && !layerById(selectedLayer)) selectedLayer = null;
             $('t-name').value = tpl.name;
             redraw();
         }
@@ -106,6 +114,8 @@ var DesignerView = (function () {
         function updateChrome() {
             $('state').textContent = isDirty() ? 'Unsaved changes' : 'Saved';
             $('b-undo').disabled = !undoStack.length;
+            $('b-bg').setAttribute('aria-pressed', String(bgMode));
+            $('b-bg').classList.toggle('btn-dark', bgMode);
             $('active-tag').innerHTML = slot === activeSlot
                 ? '<span class="st st-paid">Active template</span>'
                 : '<button class="btn btn-sm" id="b-activate">Make this the active template</button>';
@@ -123,7 +133,8 @@ var DesignerView = (function () {
         function drawCanvas() {
             var canvas = $('canvas');
             Fonts.apply(canvas, tpl.font);
-            canvas.innerHTML = '<div class="d-safe" id="safe">' + tpl.components.map(function (c) {
+            canvas.classList.toggle('bg-mode', bgMode);
+            canvas.innerHTML = Components.backgroundHtml(tpl.background) + '<div class="d-safe" id="safe">' + tpl.components.map(function (c) {
                 var t = T[c.type];
                 return '<div class="d-box cmp cmp-' + c.type + (c.id === selectedId ? ' sel' : '') +
                     (t.lockX ? ' lockx' : '') + (t.lockH ? ' lockh' : '') + '" data-id="' + esc(c.id) + '"' + Components.boxAttrs(c) + '>' +
@@ -131,7 +142,7 @@ var DesignerView = (function () {
                     (c.type === 'items' ? '<div class="grow-hint">Grows with line items, pushes content below it down</div>' : '') +
                     HANDLES.map(function (h) { return '<span class="h" data-h="' + h + '"></span>'; }).join('') +
                 '</div>';
-            }).join('') + '</div>';
+            }).join('') + '</div>' + (bgMode ? layerOverlay() : '');
 
             // Flag boxes whose content does not fit, so nothing is silently cut off when printed.
             Dandy.els('.d-box', canvas).forEach(function (box) {
@@ -143,6 +154,7 @@ var DesignerView = (function () {
                 }
             });
             fit();
+            scheduleContrast();
         }
 
         function fit() {
@@ -160,9 +172,9 @@ var DesignerView = (function () {
             tpl.components.forEach(function (c) { present[c.type] = true; });
             $('palette').innerHTML = Components.TYPE_ORDER.map(function (type) {
                 var t = T[type];
-                var disabled = !t.multi && present[type];
+                var disabled = bgMode || (!t.multi && present[type]);
                 return '<div class="chip" data-type="' + type + '" aria-disabled="' + (disabled ? 'true' : 'false') + '"' +
-                    (disabled ? ' title="Already on the page"' : '') + '>' + esc(t.label) +
+                    (disabled ? ' title="' + (bgMode ? 'Finish the background first' : 'Already on the page') + '"' : '') + '>' + esc(t.label) +
                     (t.required ? '<span class="req" title="Required">' + Dandy.icon('lock') + '</span>' : '') + '</div>';
             }).join('');
             Dandy.hydrateIcons($('palette'));
@@ -170,12 +182,17 @@ var DesignerView = (function () {
 
         function drawProps() {
             var box = $('props');
+            if (bgMode) { drawBgPanel(); return; }
             var c = selectedId && find(selectedId);
             if (!c) {
                 box.innerHTML = '<h2>Properties</h2><p class="muted" style="font-size:.8125rem;line-height:1.7">' +
                     'Drag a component onto the page, or click it in the list to place it. Click a box to style it.<br><br>' +
                     'The dashed blue line is the printable area. Boxes cannot leave it or overlap each other.<br><br>' +
-                    '<b>Line items</b> runs the full width and grows downward. Everything below it moves down to make room, and long invoices continue on a new page.</p>';
+                    '<b>Line items</b> runs the full width and grows downward. Everything below it moves down to make room, and long invoices continue on a new page.</p>' +
+                    '<h3 class="mt-3" style="font-size:.75rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);margin-bottom:.5rem">Background</h3>' +
+                    '<div class="btn-row"><button class="btn btn-sm" id="p-bg">' + Dandy.icon('image') + 'Colour and images</button></div>';
+                box.querySelector('#p-bg').addEventListener('click', function () { setBgMode(true); });
+                Dandy.hydrateIcons(box);
                 return;
             }
             var t = T[c.type];
@@ -197,6 +214,7 @@ var DesignerView = (function () {
                 }).join('') + '</div></div>' : '') +
                 (hasLabel ? '<label class="check mb-2"><input type="checkbox" id="p-label"' + (p.label ? ' checked' : '') + '> Show heading</label>' : '') +
                 (t.hasText ? '<label class="field"><span>Text</span><textarea id="p-text" rows="4" maxlength="500">' + esc(p.text) + '</textarea></label>' : '') +
+                (c.type !== 'logo' && c.type !== 'divider' ? '<div class="field"><span>Contrast on the background</span><div id="cx-one"></div></div>' : '') +
                 (t.required
                     ? '<p class="note note-info mt-2">' + Dandy.icon('lock') + '<span>Required. A tax invoice needs this.</span></p>'
                     : '<button class="btn btn-danger btn-sm mt-2" id="p-del">' + Dandy.icon('trash') + 'Remove</button>');
@@ -233,6 +251,7 @@ var DesignerView = (function () {
             }
             var del = box.querySelector('#p-del');
             if (del) del.addEventListener('click', removeSelected);
+            paintContrast();
         }
 
         /* --- Typeface -------------------------------------------------------------------- */
@@ -307,7 +326,7 @@ var DesignerView = (function () {
 
         function removeFont(id) {
             var name = Fonts.label(id);
-            Promise.all([DB.getTemplate('A'), DB.getTemplate('B')]).then(function (saved) {
+            Promise.all([DB.getTemplate('A', { bare: true }), DB.getTemplate('B', { bare: true })]).then(function (saved) {
                 var users = [saved[0], saved[1]].filter(function (t) { return t.font.body === id || t.font.heading === id; })
                     .map(function (t) { return t.slot; });
                 var msg = 'Remove the font "' + name + '"?' + (users.length ? '\n\nTemplate ' + users.join(' and ') +
@@ -323,10 +342,287 @@ var DesignerView = (function () {
         }
 
         function select(id) {
+            if (id && bgMode) { setBgMode(false); }
             selectedId = id;
             Dandy.els('.d-box', $('canvas')).forEach(function (b) { b.classList.toggle('sel', b.dataset.id === id); });
             propUndoPending = false;
             drawProps();
+        }
+
+        /* --- Background: colour, pictures, size budget, contrast -------------------------------- */
+
+        function layerById(id) { return tpl.background.layers.filter(function (l) { return l.id === id; })[0] || null; }
+
+        function clampLayer(l) {
+            return Components.cleanBackground({ color: tpl.background.color, layers: [l] }).layers[0];
+        }
+
+        function setBgMode(on) {
+            if (bgMode === on) return;
+            bgMode = on;
+            selectedLayer = null;
+            if (on) selectedId = null;
+            redraw();
+        }
+
+        function layerOverlay() {
+            return '<div class="d-layers">' + tpl.background.layers.map(function (l) {
+                return '<div class="d-layer' + (l.id === selectedLayer ? ' sel' : '') + '" data-layer="' + esc(l.id) + '" style="left:' + l.x +
+                    'mm;top:' + l.y + 'mm;width:' + l.w + 'mm;height:' + l.h + 'mm">' +
+                    HANDLES.map(function (h) { return '<span class="h" data-h="' + h + '"></span>'; }).join('') + '</div>';
+            }).join('') + '</div>';
+        }
+
+        /* A new picture starts as large as the page allows, keeping its shape, centred. */
+        function startRect(row) {
+            var P = Components.PAGE, ratio = row.w / row.h;
+            var w = ratio >= P.w / P.h ? P.w : P.h * ratio;
+            var h = ratio >= P.w / P.h ? P.w / ratio : P.h;
+            return { x: (P.w - w) / 2, y: (P.h - h) / 2, w: w, h: h };
+        }
+
+        function bgChange(fn, isStream) {
+            if (!isStream || !propUndoPending) { pushUndo(); propUndoPending = !!isStream; }
+            fn();
+            drawCanvas();
+            updateChrome();
+        }
+
+        function removeLayer(id) {
+            pushUndo();
+            tpl.background.layers = tpl.background.layers.filter(function (l) { return l.id !== id; });
+            if (selectedLayer === id) selectedLayer = null;
+            drawCanvas();
+            drawBgPanel();
+            updateChrome();
+        }
+
+        function addImage(file) {
+            if (locked) return;
+            if (tpl.background.layers.length >= Components.LAYER_MAX) { Dandy.toast('A template can have up to ' + Components.LAYER_MAX + ' images.'); return; }
+            Dandy.toast('Optimising ' + file.name + '...');
+            Images.optimise(file).then(function (row) {
+                if (!alive) return;
+                Images.remember(row);
+                pending[row.id] = row;
+                pushUndo();
+                var r = startRect(row);
+                var layer = clampLayer({ id: Components.newId('layer'), imageId: row.id, x: r.x, y: r.y, w: r.w, h: r.h, opacity: 1, fit: 'cover' });
+                tpl.background.layers.push(layer);
+                selectedLayer = layer.id;
+                if (!bgMode) { bgMode = true; selectedId = null; }
+                redraw();
+                Dandy.toast('Added ' + row.name + ': ' + Images.formatBytes(file.size) + ' became ' + Images.formatBytes(row.bytes) + '.');
+            }).catch(function (err) { Dandy.toast(err.message); });
+        }
+
+        var FIT_LABEL = { cover: 'Fill box', contain: 'Whole image' };
+
+        function drawBgPanel() {
+            var box = $('props');
+            var bg = tpl.background;
+            var layers = bg.layers;
+            var sel = selectedLayer && layerById(selectedLayer);
+            var used = Images.usage(bg);
+            var b = Images.budget(used);
+            var pct = Math.min(100, used / b.hard * 100);
+            var msg = { ok: '', warn: 'Heavy: this template will load more slowly and use more storage. You can still save it.',
+                        block: 'Too large to save. Remove an image, or use a smaller one.' }[b.level];
+
+            box.innerHTML = '<div class="bg-panel"><h2>Page background</h2>' +
+                '<div class="field"><span>Page colour</span><div class="swatches">' + Components.BG_SWATCHES.map(function (c) {
+                    return '<button type="button" data-bgc="' + c + '" style="background:' + c + '" aria-label="' + c + '" aria-pressed="' + (bg.color === c) + '"></button>';
+                }).join('') + '</div>' +
+                '<div class="color-row"><input type="color" id="bg-color" value="' + bg.color + '" aria-label="Pick a colour">' +
+                    '<input type="text" id="bg-hex" maxlength="7" value="' + bg.color + '" aria-label="Colour code" spellcheck="false"></div></div>' +
+
+                '<h3>Images (' + layers.length + ' of ' + Components.LAYER_MAX + ')</h3>' +
+                '<button class="btn btn-sm" id="bg-add"' + (layers.length >= Components.LAYER_MAX ? ' disabled' : '') + '>' + Dandy.icon('plus') + 'Add image</button>' +
+                '<p class="faint mt-1" style="font-size:.6875rem;line-height:1.6">Images sit on the colour and under all the text. They are shrunk and compressed when you add them.</p>' +
+                '<div class="layer-list">' + layers.slice().reverse().map(function (l) {
+                    var row = Images.get(l.imageId) || {};
+                    return '<div class="layer-row' + (l.id === selectedLayer ? ' sel' : '') + '" data-layer="' + esc(l.id) + '">' +
+                        '<img src="' + esc(Images.url(l.imageId)) + '" alt=""><span class="grow">' + esc(row.name || 'Image') +
+                        '<small>' + esc(Images.formatBytes(row.bytes || 0)) + '</small></span></div>';
+                }).join('') + '</div>' +
+                (sel ? '<h3>Selected image</h3>' +
+                    '<div class="field"><span>Fit</span><div class="seg">' + ['cover', 'contain'].map(function (f) {
+                        return '<button type="button" data-fit="' + f + '" aria-pressed="' + (sel.fit === f) + '">' + FIT_LABEL[f] + '</button>';
+                    }).join('') + '</div></div>' +
+                    '<label class="field"><span>Opacity (' + Math.round(sel.opacity * 100) + '%)</span>' +
+                        '<input type="range" id="bg-op" min="5" max="100" step="5" value="' + Math.round(sel.opacity * 100) + '"></label>' +
+                    '<div class="btn-row"><button class="btn btn-sm" id="bg-full">Fill page</button>' +
+                        '<button class="btn btn-sm" id="bg-fwd">Forward</button><button class="btn btn-sm" id="bg-back">Back</button>' +
+                        '<button class="btn btn-sm btn-danger" id="bg-del">' + Dandy.icon('trash') + 'Remove</button></div>' : '') +
+
+                '<h3>Size</h3><div class="meter ' + b.level + '"><i style="width:' + pct + '%"></i><b style="left:' + (b.soft / b.hard * 100) + '%"></b></div>' +
+                '<p style="font-size:.75rem;line-height:1.6">' + esc(Images.formatBytes(used)) + ' used. Warning above ' + esc(Images.formatBytes(b.soft)) +
+                    ', limit ' + esc(Images.formatBytes(b.hard)) + '.</p>' +
+                (msg ? '<p class="note ' + (b.level === 'block' ? 'note-bad' : 'note-warn') + ' mt-1">' + Dandy.icon('alert') + '<span>' + esc(msg) + '</span></p>' : '') +
+
+                '<h3>Text contrast</h3><div id="cx-list"></div>' +
+                '<p class="faint" style="font-size:.6875rem;line-height:1.6">Each box\'s main text colour against the average colour behind it.</p>' +
+                '<button class="btn btn-dark btn-sm mt-3" id="bg-done">Back to layout</button></div>';
+            Dandy.hydrateIcons(box);
+
+            Dandy.els('[data-bgc]', box).forEach(function (b2) {
+                b2.addEventListener('click', function () { bgChange(function () { tpl.background.color = b2.dataset.bgc; }); drawBgPanel(); });
+            });
+            var color = box.querySelector('#bg-color'), hex = box.querySelector('#bg-hex');
+            color.addEventListener('input', function () {
+                bgChange(function () { tpl.background.color = color.value.toLowerCase(); }, true);
+                hex.value = tpl.background.color;
+            });
+            color.addEventListener('change', function () { propUndoPending = false; drawBgPanel(); });
+            hex.addEventListener('change', function () {
+                var v = hex.value.trim();
+                if (v.charAt(0) !== '#') v = '#' + v;
+                if (!/^#[0-9a-f]{6}$/i.test(v)) { hex.value = tpl.background.color; Dandy.toast('Use a colour code like #f3f4f6'); return; }
+                bgChange(function () { tpl.background.color = v.toLowerCase(); });
+                drawBgPanel();
+            });
+            box.querySelector('#bg-add').addEventListener('click', function () { $('bg-file').click(); });
+            Dandy.els('.layer-row', box).forEach(function (row) {
+                row.addEventListener('click', function () { selectedLayer = row.dataset.layer; drawCanvas(); drawBgPanel(); });
+            });
+            Dandy.els('[data-fit]', box).forEach(function (b2) {
+                b2.addEventListener('click', function () { bgChange(function () { sel.fit = b2.dataset.fit; }); drawBgPanel(); });
+            });
+            var op = box.querySelector('#bg-op');
+            if (op) {
+                op.addEventListener('input', function () {
+                    bgChange(function () { sel.opacity = clampLayer(Object.assign({}, sel, { opacity: op.value / 100 })).opacity; }, true);
+                    op.previousElementSibling.textContent = 'Opacity (' + Math.round(sel.opacity * 100) + '%)';
+                });
+                op.addEventListener('change', function () { propUndoPending = false; });
+            }
+            var full = box.querySelector('#bg-full');
+            if (full) full.addEventListener('click', function () {
+                bgChange(function () { var P = Components.PAGE; Object.assign(sel, clampLayer(Object.assign({}, sel, { x: 0, y: 0, w: P.w, h: P.h, fit: 'cover' }))); });
+                drawBgPanel();
+            });
+            function reorder(by) {
+                var list = tpl.background.layers, i = list.indexOf(sel), j = i + by;
+                if (j < 0 || j >= list.length) return;
+                bgChange(function () { list.splice(j, 0, list.splice(i, 1)[0]); });
+                drawBgPanel();
+            }
+            var fwd = box.querySelector('#bg-fwd'), back = box.querySelector('#bg-back'), del = box.querySelector('#bg-del');
+            if (fwd) fwd.addEventListener('click', function () { reorder(1); });
+            if (back) back.addEventListener('click', function () { reorder(-1); });
+            if (del) del.addEventListener('click', function () { removeLayer(sel.id); });
+            box.querySelector('#bg-done').addEventListener('click', function () { setBgMode(false); });
+            paintContrast();
+        }
+
+        /* Contrast: the main text colour of each box against the average colour behind it, judged
+           with the WCAG ratio. Advice only; it never stops a save. */
+        function scheduleContrast() {
+            clearTimeout(contrastTimer);
+            contrastTimer = setTimeout(refreshContrast, 150);
+        }
+
+        function refreshContrast() {
+            var token = ++contrastToken;
+            Images.sampler(tpl.background).then(function (sample) {
+                if (!alive || token !== contrastToken) return;
+                var m = Components.MARGIN;
+                contrastRows = tpl.components.filter(function (c) { return c.type !== 'logo' && c.type !== 'divider'; }).map(function (c) {
+                    var r = Images.ratio(Images.parseHex(c.props.accent), sample({ x: c.x + m, y: c.y + m, w: c.w, h: c.h }));
+                    return { id: c.id, label: T[c.type].label, ratio: r, level: Images.level(r) };
+                });
+                paintContrast();
+            });
+        }
+
+        var LEVEL_TEXT = { good: 'Easy to read', close: 'Borderline: check it by eye', bad: 'Hard to read' };
+
+        function mark(level) {
+            return '<span class="mark ' + level + '" role="img" aria-label="' + LEVEL_TEXT[level] + '">' +
+                (level === 'good' ? Dandy.icon('check') : level === 'bad' ? Dandy.icon('x') : '-') + '</span>';
+        }
+
+        function paintContrast() {
+            var list = $('cx-list'), one = $('cx-one');
+            if (list) {
+                list.innerHTML = contrastRows.map(function (r) {
+                    return '<div class="cx">' + mark(r.level) + '<span class="grow">' + esc(r.label) + '</span><span class="num">' + r.ratio.toFixed(1) + ':1</span></div>';
+                }).join('');
+            }
+            if (one) {
+                var r = contrastRows.filter(function (x) { return x.id === selectedId; })[0];
+                one.innerHTML = r ? '<div class="cx">' + mark(r.level) + '<span class="grow">' + esc(LEVEL_TEXT[r.level]) + '</span><span class="num">' + r.ratio.toFixed(1) + ':1</span></div>' : '';
+            }
+        }
+
+        /* --- Pointer: moving and resizing background pictures ---------------------------------- */
+
+        function resizeLayer(o, h, dx, dy) {
+            var MIN = Components.LAYER_MIN, P = Components.PAGE;
+            var L = o.x, R = o.x + o.w, Tp = o.y, B = o.y + o.h;
+            if (h.indexOf('e') !== -1) R = clamp(R + dx, L + MIN, P.w);
+            if (h.indexOf('w') !== -1) L = clamp(L + dx, 0, R - MIN);
+            if (h.indexOf('s') !== -1) B = clamp(B + dy, Tp + MIN, P.h);
+            if (h.indexOf('n') !== -1) Tp = clamp(Tp + dy, 0, B - MIN);
+            return { x: L, y: Tp, w: R - L, h: B - Tp };
+        }
+
+        function paintLayer(d, r) {
+            var set = function (n) {
+                if (!n) return;
+                n.style.left = r.x + 'mm'; n.style.top = r.y + 'mm'; n.style.width = r.w + 'mm'; n.style.height = r.h + 'mm';
+            };
+            set(d.node);
+            // Only layers with a picture have a .bg-l element, so count among those.
+            var shown = tpl.background.layers.filter(function (l) { return Images.url(l.imageId); });
+            set($('canvas').querySelectorAll('.bg-l')[shown.indexOf(d.layer)]);     // the picture follows the frame
+        }
+
+        function onLayerDown(e) {
+            var node = e.target.closest('.d-layer');
+            if (!node) {
+                if (selectedLayer) { selectedLayer = null; drawCanvas(); drawBgPanel(); }
+                return;
+            }
+            var l = layerById(node.dataset.layer);
+            if (!l) return;
+            e.preventDefault();
+            var handle = e.target.closest('.h');
+            if (selectedLayer !== l.id) {
+                selectedLayer = l.id;
+                drawCanvas();
+                drawBgPanel();
+                node = $('canvas').querySelector('.d-layer[data-layer="' + l.id + '"]');
+            }
+            var rc = $('canvas').getBoundingClientRect();
+            drag = {
+                kind: 'layer', layer: l, node: node, mode: handle ? 'resize' : 'move', h: handle && handle.dataset.h,
+                sx: e.clientX, sy: e.clientY, orig: { x: l.x, y: l.y, w: l.w, h: l.h }, ppm: rc.width / Components.PAGE.w, rect: null, moved: false
+            };
+            window.addEventListener('pointermove', onMove);
+            window.addEventListener('pointerup', onUp);
+            window.addEventListener('pointercancel', onUp);
+        }
+
+        function moveLayer(e) {
+            var dx = (e.clientX - drag.sx) / drag.ppm, dy = (e.clientY - drag.sy) / drag.ppm;
+            if (!drag.moved && Math.abs(e.clientX - drag.sx) + Math.abs(e.clientY - drag.sy) < 3) return;
+            drag.moved = true;
+            var o = drag.orig;
+            var raw = drag.mode === 'move' ? { x: o.x + dx, y: o.y + dy, w: o.w, h: o.h } : resizeLayer(o, drag.h, dx, dy);
+            drag.rect = clampLayer(Object.assign({}, drag.layer, raw));
+            paintLayer(drag, drag.rect);
+        }
+
+        function finishLayer(d) {
+            if (!d.moved || !d.rect) return;
+            var r = d.rect, o = d.orig;
+            if (r.x === o.x && r.y === o.y && r.w === o.w && r.h === o.h) return;
+            pushUndo();
+            d.layer.x = r.x; d.layer.y = r.y; d.layer.w = r.w; d.layer.h = r.h;
+            drawCanvas();
+            drawBgPanel();
+            updateChrome();
         }
 
         /* --- Adding and removing ------------------------------------------------------------- */
@@ -396,6 +692,7 @@ var DesignerView = (function () {
         function onCanvasDown(e) {
             if (locked) return;
             if (e.button !== undefined && e.button !== 0) return;
+            if (bgMode) { onLayerDown(e); return; }
             var box = e.target.closest('.d-box');
             if (!box) { select(null); return; }
             var c = find(box.dataset.id);
@@ -417,6 +714,7 @@ var DesignerView = (function () {
         function onMove(e) {
             if (!drag) return;
             if (drag.kind === 'chip') { moveChip(e); return; }
+            if (drag.kind === 'layer') { moveLayer(e); return; }
 
             var dx = (e.clientX - drag.sx) / drag.ppm, dy = (e.clientY - drag.sy) / drag.ppm;
             if (!drag.moved && Math.abs(e.clientX - drag.sx) + Math.abs(e.clientY - drag.sy) < 3) return;
@@ -440,6 +738,7 @@ var DesignerView = (function () {
             if (!d) return;
 
             if (d.kind === 'chip') { finishChip(d); return; }
+            if (d.kind === 'layer') { finishLayer(d); return; }
             if (!d.moved || !d.rect) return;
 
             var r = d.rect, o = d.orig;
@@ -459,7 +758,7 @@ var DesignerView = (function () {
         /* --- Pointer: dragging a component in from the palette -------------------------------- */
 
         function onPaletteDown(e) {
-            if (locked) return;
+            if (locked || bgMode) return;
             var chip = e.target.closest('.chip');
             if (!chip || chip.getAttribute('aria-disabled') === 'true') return;
             e.preventDefault();
@@ -500,6 +799,22 @@ var DesignerView = (function () {
             if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
 
             if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); undo(); return; }
+            if (bgMode) {
+                var layer = selectedLayer && layerById(selectedLayer);
+                if (!layer) return;
+                if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); removeLayer(layer.id); return; }
+                if (e.key === 'Escape') { selectedLayer = null; drawCanvas(); drawBgPanel(); return; }
+                var nudge = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[e.key];
+                if (!nudge) return;
+                e.preventDefault();
+                var k = e.shiftKey ? 5 : 1;
+                var moved = clampLayer(Object.assign({}, layer, { x: layer.x + nudge[0] * k, y: layer.y + nudge[1] * k }));
+                if (moved.x === layer.x && moved.y === layer.y) return;
+                pushUndo();
+                layer.x = moved.x; layer.y = moved.y;
+                drawCanvas(); drawBgPanel(); updateChrome();
+                return;
+            }
             var c = selectedId && find(selectedId);
             if (!c) return;
 
@@ -529,21 +844,43 @@ var DesignerView = (function () {
             updateChrome();
         });
         $('b-undo').addEventListener('click', undo);
+        $('b-bg').addEventListener('click', function () { setBgMode(!bgMode); });
+        $('bg-file').addEventListener('change', function (e) {
+            var file = e.target.files && e.target.files[0];
+            e.target.value = '';
+            if (file) addImage(file);
+        });
 
         $('b-reset').addEventListener('click', function () {
-            if (!window.confirm('Reset this layout to the original template? You can undo this before saving.')) return;
+            if (!window.confirm('Reset this layout to the original template? Your background is kept. You can undo this before saving.')) return;
             pushUndo();
+            var keepBackground = tpl.background;
             tpl = Components.defaultTemplate(slot);
+            tpl.background = keepBackground;
             selectedId = null;
             $('t-name').value = tpl.name;
             redraw();
         });
 
         $('b-save').addEventListener('click', function () {
-            DB.saveTemplate(tpl).then(function (clean) {
+            // Pictures cost storage and load time, so the template's total is checked before it is kept.
+            var used = Images.usage(tpl.background);
+            var b = Images.budget(used);
+            if (b.level === 'block') {
+                Dandy.toast('The images add up to ' + Images.formatBytes(used) + ', over the ' + Images.formatBytes(b.hard) + ' limit. Remove or replace one to save.');
+                setBgMode(true);
+                return;
+            }
+            if (b.level === 'warn' && !window.confirm('The images in this template add up to ' + Images.formatBytes(used) +
+                '. That is heavy: invoices will load more slowly and it uses more storage and backup space.\n\nSave anyway?')) return;
+
+            var inUse = Components.imageIds(tpl.background);
+            var fresh = inUse.filter(function (id) { return pending[id]; }).map(function (id) { return pending[id]; });
+            DB.saveTemplate(tpl, fresh).then(function (clean) {
                 tpl = clone(clean);
                 savedJson = JSON.stringify(clean);
                 undoStack = [];
+                pending = {};
                 redraw();
                 Dandy.toast('Template ' + slot + ' saved. Every invoice now uses this layout.');
             }).catch(function (err) { Dandy.toast('Could not save: ' + err.message); });
@@ -569,6 +906,7 @@ var DesignerView = (function () {
             refresh: fit,
             destroy: function () {
                 alive = false;
+                clearTimeout(contrastTimer);
                 if (cancelWait) cancelWait();
                 if (lock) lock.release();
                 document.removeEventListener('keydown', onKey);

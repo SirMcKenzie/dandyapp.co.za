@@ -7,7 +7,7 @@
    invoices; they live in IndexedDB, not in this cache.
    ========================================================================== */
 
-var CACHE = 'dandyapp-v3';
+var CACHE = 'dandyapp-v4';
 
 /* After this long without an answer from the network, a cached copy (if there is one) is used
    instead, so a stalled connection does not hang the app. */
