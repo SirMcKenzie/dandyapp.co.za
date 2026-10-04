@@ -462,3 +462,42 @@
 /* --- A page another tab has locked: read-only, with the reason shown above it ------------------- */
 .is-locked .d-stage, .is-locked .palette { pointer-events: none; opacity: .7; }
 .lock-banner { margin-bottom: 1rem; }
+
+/* --- Quick tour: a rounded window with a rounded screenshot of each page ------------------------ */
+
+.tour {
+    position: fixed; inset: 0; z-index: 450; display: flex; align-items: center; justify-content: center;
+    padding: .75rem; background: rgb(9 9 11 / .55); backdrop-filter: blur(4px);
+    opacity: 0; transition: opacity .25s ease;
+}
+.tour.open { opacity: 1; }
+.tour-window {
+    position: relative; width: 100%; max-width: 46rem; max-height: 100%; overflow-y: auto;
+    background: var(--slab); border-radius: var(--r-outer); padding: 1rem; box-shadow: var(--shadow-2xl);
+    transform: translateY(.75rem) scale(.98); transition: transform .25s ease;
+}
+.tour.open .tour-window { transform: none; }
+.tour-shot {
+    aspect-ratio: 16 / 10; overflow: hidden; border-radius: var(--r-inner);
+    border: 1px solid var(--border); background: var(--white); box-shadow: var(--shadow);
+}
+.tour-shot img { width: 100%; height: 100%; object-fit: cover; object-position: top left; }
+.tour [hidden] { display: none; }
+.tour-x {
+    position: absolute; top: 1.5rem; right: 1.5rem; display: grid; place-items: center;
+    width: 2rem; height: 2rem; border-radius: var(--r-pill);
+    background: rgb(255 255 255 / .92); border: 1px solid var(--border); box-shadow: var(--shadow-sm);
+}
+.tour-x:hover { background: var(--white); border-color: var(--faint); }
+.tour-x svg { width: .875rem; height: .875rem; }
+.tour-body { padding: 1.25rem .5rem .5rem; }
+.tour-step { font-size: .6875rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.tour-body h2 { font-size: 1.5rem; font-weight: 800; letter-spacing: -.01em; margin: .25rem 0 .5rem; }
+.tour-text { font-size: .875rem; line-height: 1.65; color: var(--muted); min-height: 4.5rem; }
+.tour-foot { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; padding: .75rem .5rem .25rem; }
+.tour-dots { display: flex; gap: .375rem; }
+.tour-dots i { width: .5rem; height: .5rem; border-radius: var(--r-pill); background: var(--border); transition: width .25s, background-color .25s; }
+.tour-dots i.on { width: 1.5rem; background: var(--ink); }
+
+@media (min-width: 640px) { .tour-window { padding: 1.25rem; } .tour-body h2 { font-size: 1.75rem; } .tour-text { font-size: .9375rem; min-height: 4rem; } }
+@media (prefers-reduced-motion: reduce) { .tour, .tour-window, .tour-dots i { transition: none; } }

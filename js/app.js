@@ -185,6 +185,7 @@ var App = (function () {
             });
             if (document.fonts && document.fonts.ready) document.fonts.ready.then(refresh);
             route();
+            if (window.Tour) Tour.maybeStart();
             registerServiceWorker();
             // A backup restored in another tab replaced the data this tab is showing.
             Locks.onReload(function () { location.reload(); });
